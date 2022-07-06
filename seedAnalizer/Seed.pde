@@ -15,19 +15,9 @@ class Seed {
   }
   
   // Display the Seed
-  void display(int xPixelFrom, int yPixelFrom, int xPixelTo, int yPixelTo) {
-    int plotWidth = xPixelTo - xPixelFrom;
-    int plotHeight = yPixelTo - yPixelFrom;
-    stroke(0);
-    strokeWeight(2); //<>//
-    noFill();
-    for (int i = 0; i<=100; i++){
-      value[i] = (value[i] > 4096) ? 0 : value[i];
-      if (validSeed)
-        stroke(0);
-      else
-        stroke(50);
-      circle( xPixelFrom + (plotWidth/100) * i , map(value[i], 0, 4096, yPixelFrom+plotHeight, yPixelFrom),5);
-    }
+  int[] valArray() {
+    
+    return value;
+     //<>//
   }
 }

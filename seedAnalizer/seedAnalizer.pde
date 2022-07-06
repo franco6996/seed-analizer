@@ -10,8 +10,12 @@
  3,179,50,150,200,400,...,350
  */
 
+// Libraries
+import grafica.*;
+
 // An Array of Bubble objects
 Seed[] seeds;
+
 // A Table object
 Table table;
 
@@ -23,37 +27,37 @@ final int plotToY = 800;
 
 void setup() {
   size(800, 800);
+  background(255);
   loadData();
-  
+  // Create a new plot and set its position on the screen
+  GPlot plot = new GPlot(this);
+  plot.setPos(25, 25);
+  // Set the plot title and the axis labels
+  plot.setTitleText("Analizing Seeds from 'data.csv'");
+  plot.getXAxis().setAxisLabelText("time");
+  plot.getYAxis().setAxisLabelText("cuentas");
+  // Display all seeds
+  for (Seed s : seeds) {
+    int[] seedValues = s.valArray();
+    // Prepare the points for the plot
+    int nPoints = seedValues.length;  //number of value points in cvs file
+    GPointsArray points = new GPointsArray(nPoints);  // points of plot
+    for (int i = 0; i < nPoints; i++) {
+      points.add(i, seedValues[i]);
+    }
+    plot.setPoints(points);
+  }
+    
+  // Draw it
+  plot.defaultDraw();
 }
 
 void draw() {
-  background(255);
-  drawMarks(plotFromX, plotFromY, plotToX, plotToY);
-  // Display all seeds
-  for (Seed s : seeds) {
-    s.display(plotFromX,plotFromY,plotToX,plotToY);
-  }
-
+  
   textAlign(LEFT);
   fill(0);
   text("Seed Analizer v0.1b", 10, height-10);
-}
-
-void drawMarks(int xPixelFrom, int yPixelFrom, int xPixelTo, int yPixelTo){
-    int plotWidth = xPixelTo - xPixelFrom;
-    int plotHeight = yPixelTo - yPixelFrom;
-    stroke(0);
-    strokeWeight(1);
-    
-    for (int i = 0; i<=10; i++){                          //draw horizontal mark lines
-      line (xPixelFrom + (plotWidth/10) * i, yPixelFrom-5, xPixelFrom + (plotWidth/10) * i, yPixelFrom+800);    
-    }
-    
-    for (int i = 0; i<=10; i++){                          //draw vertical mark lines
-      
-      line (xPixelFrom-5, yPixelFrom + (plotHeight/10) * i, xPixelFrom+5, yPixelFrom + (plotHeight/10) * i);    
-    }
+  while(true);
 }
 
 void loadData() {
