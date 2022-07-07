@@ -12,6 +12,9 @@
 
 // Libraries
 import grafica.*;
+import java.util.Random;
+// Grafica objects
+GPlot plot1;
 
 // An Array of Bubble objects
 Seed[] seeds;
@@ -22,42 +25,43 @@ Table table;
 // Define the coordinates where to plot
 final int plotFromX = 0;
 final int plotFromY = 0;
-final int plotToX = 800;
-final int plotToY = 800;
+final int plotToX = 700;
+final int plotToY = 700;
 
 void setup() {
   size(800, 800);
   background(255);
+  randomSeed(2);
+  // Load the seed data from .csv file
   loadData();
   // Create a new plot and set its position on the screen
-  GPlot plot = new GPlot(this);
-  plot.setPos(25, 25);
+  plot1 = new GPlot(this);
+  plot1.setPos(plotFromX, plotFromY);
+  plot1.setDim( plotToX-plotFromX, plotToY-plotFromY);
   // Set the plot title and the axis labels
-  plot.setTitleText("Analizing Seeds from 'data.csv'");
-  plot.getXAxis().setAxisLabelText("time");
-  plot.getYAxis().setAxisLabelText("cuentas");
-  // Display all seeds
+  plot1.setTitleText("Analizing Seeds from 'data.csv'");
+  plot1.getXAxis().setAxisLabelText("time");
+  plot1.getYAxis().setAxisLabelText("cuentas");
+  // Add one layer for every seed
   for (Seed s : seeds) {
-    int[] seedValues = s.valArray();
-    // Prepare the points for the plot
-    int nPoints = seedValues.length;  //number of value points in cvs file
-    GPointsArray points = new GPointsArray(nPoints);  // points of plot
-    for (int i = 0; i < nPoints; i++) {
-      points.add(i, seedValues[i]);
-    }
-    plot.setPoints(points);
+    s.displayLayer();
   }
-    
-  // Draw it
-  plot.defaultDraw();
+  // Set plot1 configs
+  plot1.activatePointLabels();
+  plot1.activateZooming(1.2, CENTER, CENTER);
+  plot1.activatePanning();
+  plot1.moveHorizontalAxesLim(100);
+  
 }
 
 void draw() {
+  // Draw it
+  plot1.defaultDraw();
   
   textAlign(LEFT);
   fill(0);
   text("Seed Analizer v0.1b", 10, height-10);
-  while(true);
+  //while(true);
 }
 
 void loadData() {
