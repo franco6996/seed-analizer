@@ -14,7 +14,7 @@ class Seed {
     validSeed = true;
   }
   
-  // Prepare to Display the one Seed
+  // Prepare to Display the values from one Seed
   void displayLayer() {
     int nPoints = value.length;                       // number of value points in cvs file
     GPointsArray points = new GPointsArray(nPoints);  // points of plot
@@ -28,6 +28,13 @@ class Seed {
     int randomColorG = int(random(10,255));
     int randomColorB = int(random(10,255));
     plot1.getLayer(str(item)).setLineColor(color(randomColorR, randomColorG, randomColorB));
-    plot1.getLayer(str(item)).setPointColor(color(randomColorR, randomColorG, randomColorB)); //<>//
+    plot1.getLayer(str(item)).setPointColor(color(randomColorR, randomColorG, randomColorB));
+  }
+  
+  int getValueMin() {
+    if (validSeed)
+      return value[50];
+    else
+      return -1;
   }
 }
