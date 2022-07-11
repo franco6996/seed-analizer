@@ -14,20 +14,27 @@ class Seed {
     validSeed = true;
   }
   
-  // Display the Seed
-  void display(int xPixelFrom, int yPixelFrom, int xPixelTo, int yPixelTo) {
-    int plotWidth = xPixelTo - xPixelFrom;
-    int plotHeight = yPixelTo - yPixelFrom;
-    stroke(0);
-    strokeWeight(2); //<>//
-    noFill();
-    for (int i = 0; i<=100; i++){
-      value[i] = (value[i] > 4096) ? 0 : value[i];
-      if (validSeed)
-        stroke(0);
-      else
-        stroke(50);
-      circle( xPixelFrom + (plotWidth/100) * i , map(value[i], 0, 4096, yPixelFrom+plotHeight, yPixelFrom),5);
+  // Prepare to Display the values from one Seed
+  void displayLayer() {
+    int nPoints = value.length;                       // number of value points in cvs file
+    GPointsArray points = new GPointsArray(nPoints);  // points of plot
+    for (int i = 0; i < nPoints; i++) {
+      if (value[i] > 0)
+      points.add(i, value[i]);
     }
+    plot1.addLayer(str(item), points);     // add points to the layer
+    // Set layer Color
+    int randomColorR = int(random(10,255));
+    int randomColorG = int(random(10,255));
+    int randomColorB = int(random(10,255));
+    plot1.getLayer(str(item)).setLineColor(color(randomColorR, randomColorG, randomColorB));
+    plot1.getLayer(str(item)).setPointColor(color(randomColorR, randomColorG, randomColorB));
+  }
+  
+  int getValueMin() {
+    if (validSeed)
+      return value[50];
+    else
+      return -1;
   }
 }
