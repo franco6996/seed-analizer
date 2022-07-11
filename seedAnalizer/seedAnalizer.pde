@@ -40,12 +40,16 @@ final String swVersion = "v0.2b";
 
 void setup() {
   size(1600, 800);
+  frameRate(24);
   background(255);
   randomSeed(2);
   
   // Set title bar and icon for Windows app
-  PImage titlebaricon = loadImage("icon.png");
-  surface.setIcon(titlebaricon);
+  PImage titlebaricon = loadImage("icon.png"); 
+  if (titlebaricon != null){
+    //javax.swing.JOptionPane.showMessageDialog(null, "I'm over here with this error: ", "Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    surface.setIcon(titlebaricon);
+  }
   surface.setTitle("Seed Analizer (" + swVersion + ")" ); 
   
   plotDataLoaded = false;
@@ -83,11 +87,13 @@ void showInfoText() {
   fill(0);
   text("Seed Analizer  " + swVersion , 10, height-10);
   
-  // Average and Standard Deviation
-  textAlign(RIGHT);
-  fill(0);
-  text("Mean = " + nf((float)avgMinValue,0,2) , width-80 , plotFromY+60);
-  text("SDeviation = " + nf((float)sDeviation,0,2) , width-80 , plotFromY+80);
+  if (plotDataLoaded == true) {
+    // Average and Standard Deviation
+    textAlign(RIGHT);
+    fill(0);
+    text("Mean = " + nf((float)avgMinValue,0,2) , width-80 , plotFromY+60);
+    text("SDeviation = " + nf((float)sDeviation,0,2) , width-80 , plotFromY+80);
+  }
 }
 
 void loadPlot2Data(){    // Histogram
@@ -190,6 +196,10 @@ void loadPlot1Data() {
 }
 
 void loadData(File selection) {
+  if (selection == null) {
+    javax.swing.JOptionPane.showMessageDialog(null, "No file selected", "Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    System.exit(0);
+  }
   // Get the name of the selected file
   fileNamePath = selection.getAbsolutePath();
   fileName = selection.getName();
