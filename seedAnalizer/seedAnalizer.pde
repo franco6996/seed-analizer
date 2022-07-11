@@ -12,8 +12,10 @@
 
 // Libraries
 import grafica.*;
-import java.util.Random;
-import java.util.ArrayList;
+//import java.util.Random;
+//import java.util.ArrayList;
+import java.util.*;
+import java.lang.Math;
 
 // Grafica objects
 GPlot plot1, plot2;
@@ -25,6 +27,7 @@ Seed[] seeds;
 Table table;
 public boolean plotDataLoaded;
 public String fileNamePath = "", fileName = "";
+public double avgMinValue, sDeviation;
 
 // Define the coordinates where to plot
 final int plotFromX = 0;
@@ -32,10 +35,18 @@ final int plotFromY = 0;
 final int plotToX = 680;
 final int plotToY = 680;
 
+// Define the version SW
+final String swVersion = "v0.2b";
+
 void setup() {
   size(1600, 800);
   background(255);
   randomSeed(2);
+  
+  // Set title bar and icon for Windows app
+  PImage titlebaricon = loadImage("icon.png");
+  surface.setIcon(titlebaricon);
+  surface.setTitle("Seed Analizer (" + swVersion + ")" ); 
   
   plotDataLoaded = false;
   selectInput("Select a .csv file to analize", "loadData");
@@ -70,7 +81,13 @@ void showInfoText() {
   // Name and version of SW
   textAlign(LEFT);
   fill(0);
-  text("Seed Analizer v0.1b", 10, height-10);
+  text("Seed Analizer  " + swVersion , 10, height-10);
+  
+  // Average and Standard Deviation
+  textAlign(RIGHT);
+  fill(0);
+  text("Mean = " + nf((float)avgMinValue,0,2) , width-80 , plotFromY+60);
+  text("SDeviation = " + nf((float)sDeviation,0,2) , width-80 , plotFromY+80);
 }
 
 void loadPlot2Data(){    // Histogram
@@ -83,34 +100,57 @@ void loadPlot2Data(){    // Histogram
       minValueVector.add(minValue);
   }
   
+  // Obtengo promedio para mostrar en pantalla
+  for (int x = 0 ; x < minValueVector.size() ; x++){
+    avgMinValue += minValueVector.get(x);
+  }
+  avgMinValue /= minValueVector.size(); //<>//
+  
+  // Obtengo desviación estandar de una muestra
+  for(int x = 0 ; x < minValueVector.size() ; x++) { //<>//
+    sDeviation += Math.pow( minValueVector.get(x) - avgMinValue, 2);
+  }
+  sDeviation = sDeviation / minValueVector.size() - 1;
+  sDeviation = Math.sqrt(sDeviation);
+  
+  Collections.sort(minValueVector);  // Ordeno vector de min a max
+  int hMinValue = minValueVector.get(0);  // Obtengo min
+  int hMaxValue = minValueVector.get(minValueVector.size()-1);  // Obtengo max
+  int hClasses = (int) Math.sqrt( (double)minValueVector.size() ); // Defino cantidad de clases (divisiones de histograma)
+  hClasses = (hClasses>20) ? 20 : hClasses; // Por regla no se recomienda mayor a 20 clases ni menor a 3
+  int hClassesWidth = ( hMaxValue - hMinValue ) / hClasses;  // Ancho de cada clase
+  int hLimitSup = hMinValue + hClassesWidth;  //  Limite superior de la primera clase - variable que va creciendo al pasar de clase
+  
   // Prepare the points for the third plot
-  float[] gaussianStack = new float[40];  // Divisions of the Histogram //<>//
-  int gaussianCounter = 0;  // Points counter
-  int index = 0;
+  float[] gaussianStack = new float[hClasses];  // Vector que guarda la frecuencia de puntos en cada clase //<>//
+  int gaussianCounter = 0;  // Contador de puntos totales de datos
   
-  for (int j = 100; j < 4000; j+=100) {
-    for (int i = 0; i < minValueVector.size(); i++) {
-      if (minValueVector.get(i) < j && minValueVector.get(i) > (j-100) ) {
-        gaussianStack[index]++;
-        gaussianCounter++;
-      }
-    }
-    index++;
+  //  Contador de puntos correspondientes a cada clase
+  int j = 0, i = 0;
+  while ( j< (hClasses-1) ){
+     if ( minValueVector.get(i) > hLimitSup){
+       gaussianStack[j] = i - gaussianCounter;
+       gaussianCounter = i;
+       j++;
+       hLimitSup += hClassesWidth;
+     }
+     i++;
   }
+  gaussianStack[j] = minValueVector.size() - gaussianCounter;
+  gaussianCounter = minValueVector.size();
   
-  GPointsArray points2 = new GPointsArray(gaussianStack.length); //<>//
+  //  A partir de aquí el código realiza la representación gráfica de las clases del histograma
+  GPointsArray points2 = new GPointsArray(gaussianStack.length);
 
-  for (int i = 0; i < gaussianStack.length; i++) {
-    points2.add(i + 0.5 - gaussianStack.length/2.0, gaussianStack[i]/gaussianCounter, i*100 + "-" + (i+1)*100);
+  for (int l = 0; l < gaussianStack.length; l++) {
+    points2.add(l + 0.5 - gaussianStack.length/2.0, gaussianStack[l]/gaussianCounter, hMinValue+l*hClassesWidth + "-" + (hMinValue+(l+1)*hClassesWidth) );
   }
 
-  // Setup for the third plot 
+  // Setup for the histogram plot 
   plot2 = new GPlot(this);
   plot2.setPos(plotFromX+plotToX+100, plotFromY);
   plot2.setDim(plotToX-plotFromX, plotToY-plotFromY);
-  //plot2.setYLim(-0.02, 0.45);
-  //plot2.setXLim(-5, 5);
-  plot2.getTitle().setText("Gaussian distribution (" + str(gaussianCounter) + " points)");
+  plot2.getTitle().setText("Seeds min values Gaussian distribution (" + str(gaussianCounter) + " points)");
   plot2.getTitle().setTextAlignment(LEFT);
   plot2.getTitle().setRelativePos(0);
   plot2.getYAxis().getAxisLabel().setText("Relative probability");
@@ -125,7 +165,6 @@ void loadPlot2Data(){    // Histogram
     color(0, 0, 255, 150), color(0, 0, 255, 200)
   }
   );
-  
   plot2.activateCentering(LEFT, GPlot.CTRLMOD);
 }
 
@@ -135,9 +174,9 @@ void loadPlot1Data() {
   plot1.setPos(plotFromX, plotFromY);
   plot1.setDim( plotToX-plotFromX, plotToY-plotFromY);
   // Set the plot title and the axis labels
-  plot1.setTitleText("Analizing Seeds from '" + fileName + "'");
-  plot1.getXAxis().setAxisLabelText("time");
-  plot1.getYAxis().setAxisLabelText("cuentas");
+  plot1.setTitleText("Overlaping Seeds from '" + fileName + "'");
+  plot1.getXAxis().setAxisLabelText("Time [ms * 10]");
+  plot1.getYAxis().setAxisLabelText("ADC raw value");
   // Add one layer for every seed
   for (Seed s : seeds) {
     s.displayLayer();
