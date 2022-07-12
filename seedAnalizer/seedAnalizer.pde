@@ -209,6 +209,24 @@ void loadData(File selection) {
   // "header" option indicates the file has a header row
   table = loadTable(fileNamePath, "header");
   
+  // Data file validation
+  String[] column_titles; 
+  String[] column_compare = { "#", "timeStamp", "0"}; 
+  try {
+    java.lang.reflect.Field f = table.getClass().getDeclaredField("columnTitles");
+    f.setAccessible(true);
+    column_titles = (String[]) f.get(table);
+    for (int i = 0; i<column_compare.length; i++ ) {
+      if ( ! column_titles[i].equals(column_compare[i]) ) {
+        javax.swing.JOptionPane.showMessageDialog(null, "It seems that the .csv file format is incorrect.", "Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        System.exit(0);
+      }
+    }
+  } 
+  catch (Exception exc) {
+    exc.printStackTrace();
+  }
+  
   // The size of the array of Bubble objects is determined by the total number of rows in the CSV
   seeds = new Seed[table.getRowCount()]; 
 
