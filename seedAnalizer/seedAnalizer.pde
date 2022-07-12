@@ -24,7 +24,7 @@ GPlot plot1, plot2;
 Seed[] seeds;
 
 // A Table object
-Table table;
+public Table table;
 public boolean plotDataLoaded;
 public String fileNamePath = "", fileName = "";
 public double avgMinValue, sDeviation;
@@ -36,21 +36,25 @@ final int plotToX = 680;
 final int plotToY = 680;
 
 // Define the version SW
-final String swVersion = "v0.2b";
+final String swVersion = "v0.3b";
 
 void setup() {
   size(1600, 800);
+  frameRate(24);
   background(255);
   randomSeed(2);
   
   // Set title bar and icon for Windows app
-  PImage titlebaricon = loadImage("icon.png");
-  surface.setIcon(titlebaricon);
+  PImage titlebaricon = loadImage("icon.png"); 
+  if (titlebaricon != null){
+    surface.setIcon(titlebaricon);
+  }
   surface.setTitle("Seed Analizer (" + swVersion + ")" ); 
   
   plotDataLoaded = false;
-  selectInput("Select a .csv file to analize", "loadData");
-  
+  File start1 = new File(sketchPath("")+"/*.csv"); 
+  selectInput("Select a .csv file to analize", "loadData", start1);
+
 }
 
 void draw() {
@@ -83,49 +87,52 @@ void showInfoText() {
   fill(0);
   text("Seed Analizer  " + swVersion , 10, height-10);
   
-  // Average and Standard Deviation
-  textAlign(RIGHT);
-  fill(0);
-  text("Mean = " + nf((float)avgMinValue,0,2) , width-80 , plotFromY+60);
-  text("SDeviation = " + nf((float)sDeviation,0,2) , width-80 , plotFromY+80);
+  if (plotDataLoaded == true) {
+    // Average and Standard Deviation
+    textAlign(RIGHT);
+    fill(0);
+    text("Mean = " + nf((float)avgMinValue,0,2) , width-80 , plotFromY+60);
+    text("SDeviation = " + nf((float)sDeviation,0,2) , width-80 , plotFromY+80);
+  }
 }
 
 void loadPlot2Data(){    // Histogram
   ArrayList<Integer> minValueVector = new ArrayList<Integer>();
   
-  // Obtengo array the todos los valores minimos de Seeds
+  // Get an array of all the min values of each valid seed
   for (Seed s : seeds) {
     int minValue = s.getValueMin();
     if (minValue>0)
       minValueVector.add(minValue);
   }
   
-  // Obtengo promedio para mostrar en pantalla
+  // Get the average to show later in screen
   for (int x = 0 ; x < minValueVector.size() ; x++){
     avgMinValue += minValueVector.get(x);
   }
   avgMinValue /= minValueVector.size(); //<>//
   
-  // Obtengo desviación estandar de una muestra
+  // Get standard deviation to show in screen
   for(int x = 0 ; x < minValueVector.size() ; x++) { //<>//
     sDeviation += Math.pow( minValueVector.get(x) - avgMinValue, 2);
   }
   sDeviation = sDeviation / minValueVector.size() - 1;
   sDeviation = Math.sqrt(sDeviation);
   
-  Collections.sort(minValueVector);  // Ordeno vector de min a max
-  int hMinValue = minValueVector.get(0);  // Obtengo min
-  int hMaxValue = minValueVector.get(minValueVector.size()-1);  // Obtengo max
-  int hClasses = (int) Math.sqrt( (double)minValueVector.size() ); // Defino cantidad de clases (divisiones de histograma)
-  hClasses = (hClasses>20) ? 20 : hClasses; // Por regla no se recomienda mayor a 20 clases ni menor a 3
-  int hClassesWidth = ( hMaxValue - hMinValue ) / hClasses;  // Ancho de cada clase
-  int hLimitSup = hMinValue + hClassesWidth;  //  Limite superior de la primera clase - variable que va creciendo al pasar de clase
+  Collections.sort(minValueVector);  // Sort values of array from min to max
+  int hMinValue = minValueVector.get(0);  // Get min
+  int hMaxValue = minValueVector.get(minValueVector.size()-1);  // Get max
+  int hClasses = (int) Math.sqrt( (double)minValueVector.size() ); // Define the quantity of classes (divisions/bins of the histogram)
+  hClasses = (hClasses>20) ? 20 : hClasses; // Classes should not be greater than 20 or smaller than 3
+  hClasses = (hClasses<4) ? 4 : hClasses;
+  int hClassesWidth = ( hMaxValue - hMinValue ) / hClasses;  // Get the width of each bin
+  int hLimitSup = hMinValue + hClassesWidth;  //  Calculate the superior limit of the first class
   
   // Prepare the points for the third plot
-  float[] gaussianStack = new float[hClasses];  // Vector que guarda la frecuencia de puntos en cada clase //<>//
-  int gaussianCounter = 0;  // Contador de puntos totales de datos
+  float[] gaussianStack = new float[hClasses];  // This vector will store the quantity of points in each class //<>//
+  int gaussianCounter = 0;  // Point counter
   
-  //  Contador de puntos correspondientes a cada clase
+  //  Divide and add each data point to its class
   int j = 0, i = 0;
   while ( j< (hClasses-1) ){
      if ( minValueVector.get(i) > hLimitSup){
@@ -139,7 +146,7 @@ void loadPlot2Data(){    // Histogram
   gaussianStack[j] = minValueVector.size() - gaussianCounter;
   gaussianCounter = minValueVector.size();
   
-  //  A partir de aquí el código realiza la representación gráfica de las clases del histograma
+  //  Forward code represents the data in the gaussianStack vector
   GPointsArray points2 = new GPointsArray(gaussianStack.length);
 
   for (int l = 0; l < gaussianStack.length; l++) {
@@ -190,6 +197,10 @@ void loadPlot1Data() {
 }
 
 void loadData(File selection) {
+  if (selection == null) {
+    javax.swing.JOptionPane.showMessageDialog(null, "No file selected.", "Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    System.exit(0);
+  }
   // Get the name of the selected file
   fileNamePath = selection.getAbsolutePath();
   fileName = selection.getName();
@@ -197,6 +208,24 @@ void loadData(File selection) {
   // Load CSV file into a Table object
   // "header" option indicates the file has a header row
   table = loadTable(fileNamePath, "header");
+  
+  // Data file validation
+  String[] column_titles; 
+  String[] column_compare = { "#", "timeStamp", "0"}; 
+  try {
+    java.lang.reflect.Field f = table.getClass().getDeclaredField("columnTitles");
+    f.setAccessible(true);
+    column_titles = (String[]) f.get(table);
+    for (int i = 0; i<column_compare.length; i++ ) {
+      if ( ! column_titles[i].equals(column_compare[i]) ) {
+        javax.swing.JOptionPane.showMessageDialog(null, "It seems that the .csv file format is incorrect.", "Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        System.exit(0);
+      }
+    }
+  } 
+  catch (Exception exc) {
+    exc.printStackTrace();
+  }
   
   // The size of the array of Bubble objects is determined by the total number of rows in the CSV
   seeds = new Seed[table.getRowCount()]; 
@@ -210,7 +239,7 @@ void loadData(File selection) {
     
     int[] seedValueArray = new int[101];
     for(int i = 0; i<101; i++){
-      seedValueArray[i] = row.getInt(str(i));           //get an array of the 100 values
+      seedValueArray[i] = row.getInt(str(i));           //get an array of the 101 values, the 50th its supoused to be the min value of each row
     }
     
     // Make a Seed object out of the data read
