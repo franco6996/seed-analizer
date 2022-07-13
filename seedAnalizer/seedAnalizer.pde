@@ -20,14 +20,10 @@ import java.lang.Math;
 // Grafica objects
 GPlot plot1, plot2;
 
-// An Array of Bubble objects
-Seed[] seeds;
-
-// A Table object
-public Table table;
-public boolean plotDataLoaded;
-public String fileNamePath = "", fileName = "";
-public double avgMinValue, sDeviation;
+// An Array of dataFiles (.csv) to be loaded with seeds data each one
+DataFile[] dataFiles;
+final int dataFilesMax = 4;  // This means 4 as max files to be loaded at the same time
+public int dataFileCount;  // Counts the files alredy loaded
 
 // Define the coordinates where to plot
 final int plotFromX = 0;
@@ -36,7 +32,7 @@ final int plotToX = 680;
 final int plotToY = 680;
 
 // Define the version SW
-final String swVersion = "v0.3b";
+final String swVersion = "v0.4b";
 
 void setup() {
   size(1600, 800);
@@ -51,7 +47,9 @@ void setup() {
   }
   surface.setTitle("Seed Analizer (" + swVersion + ")" ); 
   
-  plotDataLoaded = false;
+  dataFiles = new DataFile[dataFilesMax];
+  dataFileCount = 0;
+  
   File start1 = new File(sketchPath("")+"/*.csv"); 
   selectInput("Select a .csv file to analize", "loadData", start1);
 
@@ -61,7 +59,6 @@ void draw() {
   background(255);  // clear the previus draw
   
   // Draw the Plot
-  if (plotDataLoaded == true) {
     plot1.defaultDraw();
     plot2.beginDraw();
     plot2.drawBackground();
@@ -70,7 +67,6 @@ void draw() {
     plot2.drawTitle();
     plot2.drawHistograms();
     plot2.endDraw();
-  }
   // Show information text arround the window
   showInfoText();
 }
@@ -87,16 +83,16 @@ void showInfoText() {
   fill(0);
   text("Seed Analizer  " + swVersion , 10, height-10);
   
-  if (plotDataLoaded == true) {
+  /*
     // Average and Standard Deviation
     textAlign(RIGHT);
     fill(0);
     text("Mean = " + nf((float)avgMinValue,0,2) , width-80 , plotFromY+60);
     text("SDeviation = " + nf((float)sDeviation,0,2) , width-80 , plotFromY+80);
-  }
+  */
 }
 
-void loadPlot2Data(){    // Histogram
+void setPlot2Config(){    // Histogram
   ArrayList<Integer> minValueVector = new ArrayList<Integer>();
   
   // Get an array of all the min values of each valid seed
@@ -175,25 +171,32 @@ void loadPlot2Data(){    // Histogram
   plot2.activateCentering(LEFT, GPlot.CTRLMOD);
 }
 
-void loadPlot1Data() {
+void plot1SetConfig() {
   // Create a new plot and set its position on the screen
   plot1 = new GPlot(this);
   plot1.setPos(plotFromX, plotFromY);
   plot1.setDim( plotToX-plotFromX, plotToY-plotFromY);
+  
   // Set the plot title and the axis labels
-  plot1.setTitleText("Overlaping Seeds from '" + fileName + "'");
+  plot1.setTitleText("Overlaping all the Seeds");
   plot1.getXAxis().setAxisLabelText("Time [ms * 10]");
   plot1.getYAxis().setAxisLabelText("ADC raw value");
-  // Add one layer for every seed
-  for (Seed s : seeds) {
-    s.displayLayer();
-  }
+  
   // Set plot1 configs
   plot1.activatePointLabels();
   plot1.activateZooming(1.2, CENTER, CENTER);
   plot1.activatePanning();
-  
-  
+}
+
+void plot1AddLayer(){
+  // Add one layer for every seed
+  for (Seed s : seeds) {
+    s.displayLayer();
+  }
+  // Add layers corresponding to each dataFile that contains each valid Seed data set with each points to plot
+  for (DataFile f : dataFiles) {
+    f.displayLayer();
+  }
 }
 
 void loadData(File selection) {
@@ -201,59 +204,18 @@ void loadData(File selection) {
     javax.swing.JOptionPane.showMessageDialog(null, "No file selected.", "Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
     System.exit(0);
   }
-  // Get the name of the selected file
-  fileNamePath = selection.getAbsolutePath();
-  fileName = selection.getName();
+  String fileNamePath = selection.getName(), fileName = selection.getAbsolutePath();
   
-  // Load CSV file into a Table object
-  // "header" option indicates the file has a header row
-  table = loadTable(fileNamePath, "header");
-  
-  // Data file validation
-  String[] column_titles; 
-  String[] column_compare = { "#", "timeStamp", "0"}; 
-  try {
-    java.lang.reflect.Field f = table.getClass().getDeclaredField("columnTitles");
-    f.setAccessible(true);
-    column_titles = (String[]) f.get(table);
-    for (int i = 0; i<column_compare.length; i++ ) {
-      if ( ! column_titles[i].equals(column_compare[i]) ) {
-        javax.swing.JOptionPane.showMessageDialog(null, "It seems that the .csv file format is incorrect.", "Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-        System.exit(0);
-      }
-    }
-  } 
-  catch (Exception exc) {
-    exc.printStackTrace();
-  }
-  
-  // The size of the array of Bubble objects is determined by the total number of rows in the CSV
-  seeds = new Seed[table.getRowCount()]; 
-
-  // You can access iterate over all the rows in a table
-  int rowCount = 0;
-  for (TableRow row : table.rows()) {
-    // You can access the fields via their column name (or index)
-    int seedNumber = row.getInt("#");               //get the item number
-    int seedTimeStamp = row.getInt("timeStamp");    //get the timeStamp
-    
-    int[] seedValueArray = new int[101];
-    for(int i = 0; i<101; i++){
-      seedValueArray[i] = row.getInt(str(i));           //get an array of the 101 values, the 50th its supoused to be the min value of each row
-    }
-    
-    // Make a Seed object out of the data read
-    seeds[rowCount] = new Seed(seedNumber, seedTimeStamp, seedValueArray);
-    rowCount++;
-  }
+  // Initialize the new file
+  dataFiles[dataFileCount] = new DataFile( fileName, fileNamePath );
+  dataFileCount++;
   
   // Load the new data to the plot
-  loadPlot1Data();
-  loadPlot2Data();
+  plot1SetConfig();
+  setPlot2Config();
   
-  // Set the flag that mark if its ready to plot
-  plotDataLoaded = true;
 }
+
 /*
 void mousePressed() {
   // Create a new row
