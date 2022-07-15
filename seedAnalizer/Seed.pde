@@ -15,20 +15,21 @@ class Seed {
   }
   
   // Prepare to Display the values from one Seed
-  void displayLayer() {
+  void addLayer( String fileName_) {
+    String layerName = fileName_ + ">" + str(item);    //Conform the plot layer name as 'csvFileName>itemNumber'
     int nPoints = value.length;                       // number of value points in cvs file
     GPointsArray points = new GPointsArray(nPoints);  // points of plot
     for (int i = 0; i < nPoints; i++) {
       if (value[i] > 0)
       points.add(i, value[i]);
     }
-    plot1.addLayer(str(item), points);     // add points to the layer
+    plot1.addLayer(layerName, points);     // add points to the layer
     // Set layer Color
     int randomColorR = int(random(10,255));
     int randomColorG = int(random(10,255));
     int randomColorB = int(random(10,255));
-    plot1.getLayer(str(item)).setLineColor(color(randomColorR, randomColorG, randomColorB));
-    plot1.getLayer(str(item)).setPointColor(color(randomColorR, randomColorG, randomColorB));
+    plot1.getLayer(layerName).setLineColor(color(randomColorR, randomColorG, randomColorB));
+    plot1.getLayer(layerName).setPointColor(color(randomColorR, randomColorG, randomColorB));
   }
   
   int getValueMin() {

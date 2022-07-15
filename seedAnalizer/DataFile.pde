@@ -13,6 +13,7 @@ class DataFile {
   
   // Initialize the file
   DataFile (String file, String filePath) {
+    plotDataLoaded = false; // this will be true when all seed data cointaned the file are loaded to the plot layers
     // Get the name of the selected file
     fileNamePath = filePath;
     fileName = file;
@@ -70,6 +71,18 @@ class DataFile {
   // Returns the standard deviation of the  minimun value for each row of table.
   double getSDeviation () {
     return sDeviation;
+  }
+  
+  boolean isPlotDataLoaded (){
+     return plotDataLoaded;
+  }
+  
+  void addLayers () {
+    // Add one layer for every seed saved in file
+    for (Seed s : seeds) {
+      s.addLayer( fileName );
+    }
+    plotDataLoaded = true;
   }
   
 }
