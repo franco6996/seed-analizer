@@ -50,6 +50,8 @@ void setup() {
   dataFiles = new DataFile[dataFilesMax];
   dataFileCount = 0;
   
+  plot1SetConfig();
+  noLoop();
   File start1 = new File(sketchPath("")+"/*.csv"); 
   selectInput("Select a .csv file to analize", "loadData", start1);
 
@@ -60,13 +62,13 @@ void draw() {
   
   // Draw the Plot
     plot1.defaultDraw();
-    plot2.beginDraw();
+    /*plot2.beginDraw();
     plot2.drawBackground();
     plot2.drawBox();
     plot2.drawYAxis();
     plot2.drawTitle();
     plot2.drawHistograms();
-    plot2.endDraw();
+    plot2.endDraw();*/
   // Show information text arround the window
   showInfoText();
 }
@@ -76,7 +78,7 @@ void showInfoText() {
   // Name of file selected
   textAlign(RIGHT);
   fill(0);
-  text(fileName, width-10, height-10);  // Shows the selected file in screen
+  //text(fileName, width-10, height-10);  // Shows the selected file in screen
   
   // Name and version of SW
   textAlign(LEFT);
@@ -91,8 +93,8 @@ void showInfoText() {
     text("SDeviation = " + nf((float)sDeviation,0,2) , width-80 , plotFromY+80);
   */
 }
-
-void setPlot2Config(){    // Histogram
+/*
+void plot2SetConfig(){    // Histogram
   ArrayList<Integer> minValueVector = new ArrayList<Integer>();
   
   // Get an array of all the min values of each valid seed
@@ -106,10 +108,10 @@ void setPlot2Config(){    // Histogram
   for (int x = 0 ; x < minValueVector.size() ; x++){
     avgMinValue += minValueVector.get(x);
   }
-  avgMinValue /= minValueVector.size(); //<>//
+  avgMinValue /= minValueVector.size();
   
   // Get standard deviation to show in screen
-  for(int x = 0 ; x < minValueVector.size() ; x++) { //<>//
+  for(int x = 0 ; x < minValueVector.size() ; x++) {
     sDeviation += Math.pow( minValueVector.get(x) - avgMinValue, 2);
   }
   sDeviation = sDeviation / minValueVector.size() - 1;
@@ -125,7 +127,7 @@ void setPlot2Config(){    // Histogram
   int hLimitSup = hMinValue + hClassesWidth;  //  Calculate the superior limit of the first class
   
   // Prepare the points for the third plot
-  float[] gaussianStack = new float[hClasses];  // This vector will store the quantity of points in each class //<>//
+  float[] gaussianStack = new float[hClasses];  // This vector will store the quantity of points in each class
   int gaussianCounter = 0;  // Point counter
   
   //  Divide and add each data point to its class
@@ -171,6 +173,13 @@ void setPlot2Config(){    // Histogram
   plot2.activateCentering(LEFT, GPlot.CTRLMOD);
 }
 
+void plot2AddLayers(){
+  // Add layers corresponding to each dataFile that contains each valid Seed data set with each points to plot
+  for (DataFile f : dataFiles) {
+    f.addLayers();
+  }
+}*/
+
 void plot1SetConfig() {
   // Create a new plot and set its position on the screen
   plot1 = new GPlot(this);
@@ -186,34 +195,34 @@ void plot1SetConfig() {
   plot1.activatePointLabels();
   plot1.activateZooming(1.2, CENTER, CENTER);
   plot1.activatePanning();
-}
-
-void plot1AddLayer(){
-  // Add one layer for every seed
-  for (Seed s : seeds) {
-    s.displayLayer();
-  }
-  // Add layers corresponding to each dataFile that contains each valid Seed data set with each points to plot
-  for (DataFile f : dataFiles) {
-    f.displayLayer();
-  }
-}
+} //<>//
 
 void loadData(File selection) {
   if (selection == null) {
     javax.swing.JOptionPane.showMessageDialog(null, "No file selected.", "Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
     System.exit(0);
   }
-  String fileNamePath = selection.getName(), fileName = selection.getAbsolutePath();
+  String fileName = selection.getName(), fileNamePath = selection.getAbsolutePath();
   
   // Initialize the new file
   dataFiles[dataFileCount] = new DataFile( fileName, fileNamePath );
+  // Add Layers of the new file selected
+  dataFiles[dataFileCount].addLayers();
+  // Prepare for the next file
   dataFileCount++;
   
-  // Load the new data to the plot
-  plot1SetConfig();
-  setPlot2Config();
   
+  
+  loop();
+}
+
+// Pressing 'n' will bring the window to select a new file to add to the plot
+void keyPressed() {
+  if (key == 'n') {
+    noLoop();
+    File start1 = new File(sketchPath("")+"/*.csv");
+    selectInput("Select a .csv file to analize", "loadData", start1);
+  }
 }
 
 /*
