@@ -6,6 +6,8 @@ class DataFile {
   boolean plotDataLoaded;  // Flag set when the dat in table is already loaded to the plot
   String fileNamePath , fileName;
   double avgMinValue, sDeviation;  // Average value and deviation of the  minimun value for each row of table.
+  int priority;  // priority to wich file display into the plot first 
+  int fileIndex; // indicate the order in wich the file was added
   
   // For data validation
   String[] column_titles; 
@@ -14,6 +16,8 @@ class DataFile {
   // Initialize the file
   DataFile (String file, String filePath) {
     plotDataLoaded = false; // this will be true when all seed data cointaned the file are loaded to the plot layers
+    priority = dataFileCount;  // priority to wich file display into the plot first
+    fileIndex = dataFileCount;
     // Get the name of the selected file
     fileNamePath = filePath;
     fileName = file;
@@ -80,9 +84,16 @@ class DataFile {
   void addLayers () {
     // Add one layer for every seed saved in file
     for (Seed s : seeds) {
-      s.addLayer( fileName );
+      s.addLayer( fileName, fileIndex);
     }
     plotDataLoaded = true;
+  }
+  
+  void removeLayers (){
+    // Remove one layer for every seed saved in file
+    for (Seed s : seeds) {
+      s.removeLayer( fileName, fileIndex);
+    }
   }
   
 }

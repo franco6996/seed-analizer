@@ -15,8 +15,8 @@ class Seed {
   }
   
   // Prepare to Display the values from one Seed
-  void addLayer( String fileName_) {
-    String layerName = fileName_ + ">" + str(item);    //Conform the plot layer name as 'csvFileName>itemNumber'
+  void addLayer( String fileName_ , int dataFileIndex_) {
+    String layerName = fileName_ + "." + str(dataFileIndex_) + ">" + str(item); //Conform the plot layer name as 'csvFileName.#>itemNumber'
     int nPoints = value.length;                       // number of value points in cvs file
     GPointsArray points = new GPointsArray(nPoints);  // points of plot
     for (int i = 0; i < nPoints; i++) {
@@ -30,6 +30,10 @@ class Seed {
     int randomColorB = int(random(10,255));
     plot1.getLayer(layerName).setLineColor(color(randomColorR, randomColorG, randomColorB));
     plot1.getLayer(layerName).setPointColor(color(randomColorR, randomColorG, randomColorB));
+  // Remove one leyer (one seed) from the plot
+  void removeLayer ( String fileName_ , int dataFileIndex_) {
+    String layerName = fileName_ + "." + str(dataFileIndex_) + ">" + str(item); //Conform the plot layer name as 'csvFileName.#>itemNumber'
+    plot1.removeLayer( layerName );
   }
   
   int getValueMin() {
