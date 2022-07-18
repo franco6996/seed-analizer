@@ -24,12 +24,24 @@ class Seed {
       points.add(i, value[i]);
     }
     plot1.addLayer(layerName, points);     // add points to the layer
+    
     // Set layer Color
-    int randomColorR = int(random(10,255));
-    int randomColorG = int(random(10,255));
-    int randomColorB = int(random(10,255));
-    plot1.getLayer(layerName).setLineColor(color(randomColorR, randomColorG, randomColorB));
-    plot1.getLayer(layerName).setPointColor(color(randomColorR, randomColorG, randomColorB));
+    int colorR, colorG, colorB, colorA;
+    colorA = 200; // color Alpha is transparency: 255 = opaque , 0 = translucent
+    if (dataFileCount < 1){  // If only have one file, set a random color
+      colorR = int(random(10,255));
+      colorG = int(random(10,255));
+      colorB = int(random(10,255));
+    }
+    else {  // with multiple files select predefined colors up to 6
+      colorR = predefinedColorR[ dataFileIndex_ ];
+      colorG = predefinedColorG[ dataFileIndex_ ];
+      colorB = predefinedColorB[ dataFileIndex_ ];
+    }
+    plot1.getLayer(layerName).setLineColor(color(colorR, colorG, colorB, colorA));
+    plot1.getLayer(layerName).setPointColor(color(colorR, colorG, colorB, colorA));
+  }
+  
   // Remove one leyer (one seed) from the plot
   void removeLayer ( String fileName_ , int dataFileIndex_) {
     String layerName = fileName_ + "." + str(dataFileIndex_) + ">" + str(item); //Conform the plot layer name as 'csvFileName.#>itemNumber'

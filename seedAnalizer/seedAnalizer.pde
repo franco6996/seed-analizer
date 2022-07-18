@@ -23,7 +23,12 @@ GPlot plot1, plot2;
 // An Array of dataFiles (.csv) to be loaded with seeds data each one
 DataFile[] dataFiles;
 final int dataFilesMax = 4;  // This means 4 as max files to be loaded at the same time
+final int dataFilesMax = 6;  // This means 4 as max files to be loaded at the same time
 public int dataFileCount;  // Counts the files alredy loaded
+// Predefined Plot Colors= {  R,   G,   B,Yell,Cyan,Mage,}
+int[] predefinedColorR = {  255,   0,   0, 255,   0, 255,};
+int[] predefinedColorG = {    0, 255,   0, 255, 255,   0,};
+int[] predefinedColorB = {    0,   0, 255,   0, 255, 255,};
 
 // Define the coordinates where to plot
 final int plotFromX = 0;
@@ -207,6 +212,10 @@ void loadData(File selection) {
   // Initialize the new file
   dataFiles[dataFileCount] = new DataFile( fileName, fileNamePath );
   // Add Layers of the new file selected
+  if ( dataFileCount == 1) {        // if enter the multiple file mode, redraw the first plot
+    dataFiles[0].removeLayers();    //  so the color indicates different files
+    dataFiles[0].addLayers();
+  }
   dataFiles[dataFileCount].addLayers();
   // Prepare for the next file
   dataFileCount++;
