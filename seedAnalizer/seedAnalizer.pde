@@ -22,9 +22,10 @@ GPlot plot1, plot2;
 
 // An Array of dataFiles (.csv) to be loaded with seeds data each one
 DataFile[] dataFiles;
-final int dataFilesMax = 4;  // This means 4 as max files to be loaded at the same time
 final int dataFilesMax = 6;  // This means 4 as max files to be loaded at the same time
 public int dataFileCount;  // Counts the files alredy loaded
+String[] column_compare = { "#", "timeStamp", "0"}; // format of .csv file to compare and validated added files.
+
 // Predefined Plot Colors= {  R,   G,   B,Yell,Cyan,Mage,}
 int[] predefinedColorR = {  255,   0,   0, 255,   0, 255,};
 int[] predefinedColorG = {    0, 255,   0, 255, 255,   0,};
@@ -41,7 +42,7 @@ final String swVersion = "v0.4b";
 
 void setup() {
   size(1600, 800);
-  frameRate(24);
+  frameRate(30);
   background(255);
   randomSeed(2);
   
@@ -204,13 +205,14 @@ void plot1SetConfig() {
 
 void loadData(File selection) {
   if (selection == null) {
-    javax.swing.JOptionPane.showMessageDialog(null, "No file selected.", "Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-    System.exit(0);
+    javax.swing.JOptionPane.showMessageDialog(null, "No file selected.", "File Input Error", javax.swing.JOptionPane.WARNING_MESSAGE);
+    return;
   }
   String fileName = selection.getName(), fileNamePath = selection.getAbsolutePath();
   
   // Initialize the new file
   dataFiles[dataFileCount] = new DataFile( fileName, fileNamePath );
+  
   // Add Layers of the new file selected
   if ( dataFileCount == 1) {        // if enter the multiple file mode, redraw the first plot
     dataFiles[0].removeLayers();    //  so the color indicates different files
@@ -228,9 +230,13 @@ void loadData(File selection) {
 // Pressing 'n' will bring the window to select a new file to add to the plot
 void keyPressed() {
   if (key == 'n') {
-    noLoop();
-    File start1 = new File(sketchPath("")+"/*.csv");
-    selectInput("Select a .csv file to analize", "loadData", start1);
+    if ( dataFileCount >= dataFilesMax ) {
+      javax.swing.JOptionPane.showMessageDialog(null, "Max number of files reached.", "File Input Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    } else {
+      noLoop();
+      File start1 = new File(sketchPath("")+"/*.csv");
+      selectInput("Select a .csv file to analize", "loadData", start1);
+    }
   }
 }
 

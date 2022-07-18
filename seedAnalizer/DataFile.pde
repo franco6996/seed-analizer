@@ -10,8 +10,7 @@ class DataFile {
   int fileIndex; // indicate the order in wich the file was added
   
   // For data validation
-  String[] column_titles; 
-  String[] column_compare = { "#", "timeStamp", "0"}; 
+  String[] column_titles;
   
   // Initialize the file
   DataFile (String file, String filePath) {
@@ -31,7 +30,8 @@ class DataFile {
       column_titles = (String[]) f.get(table);
       for (int i = 0; i<column_compare.length; i++ ) {
         if ( ! column_titles[i].equals(column_compare[i]) ) {
-          javax.swing.JOptionPane.showMessageDialog(null, "It seems that the .csv file format is incorrect.", "Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+          javax.swing.JOptionPane.showMessageDialog(null, "It seems that the .csv file format is incorrect.", 
+                                                    "File Input Error", javax.swing.JOptionPane.ERROR_MESSAGE);
           System.exit(0);
         }
       }
