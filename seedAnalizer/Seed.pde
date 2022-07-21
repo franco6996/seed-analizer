@@ -16,7 +16,7 @@ class Seed {
     if ( value[0] == 0 )
       validSeed = false;
     else
-    validSeed = true;
+      validSeed = true;
   }
   
   // Prepare to Display the values from one Seed
@@ -60,10 +60,14 @@ class Seed {
     plot1.removeLayer( layerName );
   }
   
-  int getValueMin() {
-    if (validSeed)
-      return value[50];
-    else
+  // Returns the delta adc value between the first value of vector and the min
+  int getDeltaV() {
+    if (validSeed == false)
       return -1;
+      
+    int deltaV;
+    deltaV = abs( value[0] - value[50] );
+    
+    return deltaV;
   }
 }

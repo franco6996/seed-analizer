@@ -5,7 +5,7 @@ class DataFile {
   Table table; // Table thats contains the file info
   boolean plotDataLoaded;  // Flag set when the dat in table is already loaded to the plot
   String fileNamePath , fileName;
-  double avgMinValue, sDeviation;  // Average value and deviation of the  minimun value for each row of table.
+  double avgDeltaValue, sDeviation;  // Average value and deviation of the  minimun value for each row of table.
   int priority;  // priority to wich file display into the plot first 
   int fileIndex; // indicate the order in wich the file was added
   
@@ -67,14 +67,69 @@ class DataFile {
     return fileName;
   }
   
-  // Returns the average of the  minimun value for each row of table.
-  double getAvgMinValue () {
-    return avgMinValue;
+  // Returns the average of all the delta values in file.
+  double getAvgDeltaValue () {
+    int delta, counter = 0;
+    double avg = 0;
+    
+    for (Seed s : seeds) {
+      delta = s.getDeltaV();
+      if (delta >=0 ){
+        avg += delta; 
+        counter++;
+      }
+    }
+    avg /= counter;
+    avgDeltaValue = avg;
+    
+    return avgDeltaValue;
+  }
+  
+  // Get an array of all the delta values of each valid see
+  private ArrayList<Integer> getDeltaValueVector () {
+    // Get an array of all the delta values of each valid see
+    ArrayList<Integer> deltaVector = new ArrayList<Integer>();
+    for (Seed s : seeds) {
+      int delta = s.getDeltaV();
+      if (delta>=0)
+        deltaVector.add(delta);
+    }
+    return deltaVector;
   }
   
   // Returns the standard deviation of the  minimun value for each row of table.
   double getSDeviation () {
+    
+    // Get an array of all the delta values of each valid see
+    ArrayList<Integer> deltaValueVector = new ArrayList<Integer>();
+    deltaValueVector = getDeltaValueVector();
+    
+    // Get de deviation
+    if (avgDeltaValue == 0)
+      getAvgDeltaValue();
+    for(int x = 0 ; x < deltaValueVector.size() ; x++) {
+      sDeviation += Math.pow( deltaValueVector.get(x) - avgDeltaValue, 2);
+    }
+    sDeviation = sDeviation / deltaValueVector.size() - 1;
+    sDeviation = Math.sqrt(sDeviation);
+    
     return sDeviation;
+  }
+  
+  // returns a vector containing = { numberOfDeltaValues , minDeltaValue, maxDeltaValue}
+  int[] getDeltaValuesInfo (){
+    int[] rtrn = {0 ,0 , 0};
+    
+    // Get an array of all the delta values of each valid see
+    ArrayList<Integer> deltaValueVector = new ArrayList<Integer>();
+    deltaValueVector = getDeltaValueVector();
+    Collections.sort(deltaValueVector);
+    
+    rtrn[0] = deltaValueVector.size();
+    rtrn[1] = deltaValueVector.get(0);
+    rtrn[2] = deltaValueVector.get( deltaValueVector.size() - 1 );
+    
+    return rtrn;
   }
   
   boolean isPlotDataLoaded (){
