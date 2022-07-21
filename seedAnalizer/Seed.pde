@@ -11,16 +11,24 @@ class Seed {
     timeStamp = timeStamp_;  // time stamp of min value of signal
     value = value_;          /* array of 101 elements, wich contains the value of ADC every 100us.
                                 value[50] corresponds to the min of the signal */
+    
+    // if the seed contains a 0 value in the first ADC measure is invalid, it should contain the aprox DAC value
+    if ( value[0] == 0 )
+      validSeed = false;
+    else
     validSeed = true;
   }
   
   // Prepare to Display the values from one Seed
   void addLayer( String fileName_ , int dataFileIndex_) {
+    
+    if (validSeed == false)  // if the seed is invalid, it will not be ploted.
+      return;
+    
     String layerName = fileName_ + "." + str(dataFileIndex_) + ">" + str(item); //Conform the plot layer name as 'csvFileName.#>itemNumber'
     int nPoints = value.length;                       // number of value points in cvs file
     GPointsArray points = new GPointsArray(nPoints);  // points of plot
     for (int i = 0; i < nPoints; i++) {
-      if (value[i] > 0)
       points.add(i, value[i]);
     }
     plot1.addLayer(layerName, points);     // add points to the layer
@@ -44,6 +52,10 @@ class Seed {
   
   // Remove one leyer (one seed) from the plot
   void removeLayer ( String fileName_ , int dataFileIndex_) {
+    
+    if (validSeed == false)  // if the seed is invalid, no layer exist in the plot of itself.
+      return;
+    
     String layerName = fileName_ + "." + str(dataFileIndex_) + ">" + str(item); //Conform the plot layer name as 'csvFileName.#>itemNumber'
     plot1.removeLayer( layerName );
   }
