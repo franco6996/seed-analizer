@@ -136,6 +136,66 @@ class DataFile {
      return plotDataLoaded;
   }
   
+  void addHistogramLayers ( int hClasses_, int hClassesWidth_, int hLimitSup_, int hMaxValue_, int hMinValue_) {
+    
+    // Get an array of all the delta values of each valid see
+    ArrayList<Integer> deltaValueVector = new ArrayList<Integer>();
+    deltaValueVector = getDeltaValueVector();
+    Collections.sort(deltaValueVector);  // Sort values of array from min to max
+    
+    // Delimit de total clases of histogram to local clases
+    int[] hClassesLocalLimits = { 1, hClasses_};
+    int maxLimit = hMinValue_ + hClassesWidth_ * ( hClasses_ -1 );
+    while ( deltaValueVector.get( deltaValueVector.size()-1 ) < maxLimit) { // Search the class where to start depending on my min local value.
+       hClassesLocalLimits[1]--;
+       maxLimit -= hClassesWidth_;
+    }
+    
+    while ( deltaValueVector.get(0) > hLimitSup_) { // Search the class where to start depending on my min local value.
+       hClassesLocalLimits[0]++;
+       hLimitSup_ += hClassesWidth_;
+    }
+    
+    int hLocalClasses = hClassesLocalLimits[1] - hClassesLocalLimits[0];
+    int hLimitSup = hMinValue_ + hClassesWidth_ * hClassesLocalLimits[0];
+    
+    // Prepare the points for the histogtram plot
+    float[] gaussianStack = new float[hLocalClasses];  // This vector will store the quantity of points in each class
+    int gaussianCounter = 0;  // Point counter
+    
+    //  Divide and add each data point to its class
+    int j = 0, i = 0;
+    while ( j< (hLocalClasses-1) ){
+       
+       if ( deltaValueVector.get(i) > hLimitSup){
+         gaussianStack[j] = i - gaussianCounter;
+         gaussianCounter = i;
+         j++;
+         hLimitSup += hClassesWidth_;
+       }
+       i++;
+       /*if ( i == deltaValueVector.size() - 1)
+         break;*/
+    }
+    gaussianStack[j] = deltaValueVector.size() - gaussianCounter;
+    gaussianCounter = deltaValueVector.size();
+    
+    //  Forward code represents the data in the gaussianStack vector
+    GPointsArray points = new GPointsArray(gaussianStack.length); //<>//
+  
+    for (int l = 0; l < gaussianStack.length; l++) {
+      points.add(l + 0.5 - gaussianStack.length/2.0, gaussianStack[l]/gaussianCounter );
+    }
+    
+    String layerName = fileName + "." + str(fileIndex) ;
+    plot2.addLayer(layerName, points);
+  }
+  
+  void removeHistogramLayers() {
+    String layerName = fileName + "." + str(fileIndex) ;
+    plot2.removeLayer ( layerName );
+  }
+  
   void addLayers () {
     // Add one layer for every seed saved in file
     for (Seed s : seeds) {

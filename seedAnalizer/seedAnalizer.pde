@@ -57,6 +57,8 @@ void setup() {
   dataFileCount = 0;
   
   plot1SetConfig();
+  plot2SetConfig();
+  
   noLoop();
   File start1 = new File(sketchPath("")+"/*.csv"); 
   selectInput("Select a .csv file to analize", "loadData", start1);
@@ -68,13 +70,13 @@ void draw() {
   
   // Draw the Plot
     plot1.defaultDraw();
-    /*plot2.beginDraw();
+    plot2.beginDraw();
     plot2.drawBackground();
     plot2.drawBox();
     plot2.drawYAxis();
     plot2.drawTitle();
     plot2.drawHistograms();
-    plot2.endDraw();*/
+    plot2.endDraw();
   // Show information text arround the window
   showInfoText();
 }
@@ -99,75 +101,54 @@ void showInfoText() {
     text("SDeviation = " + nf((float)sDeviation,0,2) , width-80 , plotFromY+80);
   */
 }
-/*
+
 void plot2SetConfig(){    // Histogram
-  ArrayList<Integer> minValueVector = new ArrayList<Integer>();
-  
-  // Get an array of all the min values of each valid seed
-  for (Seed s : seeds) {
-    int minValue = s.getValueMin();
-    if (minValue>0)
-      minValueVector.add(minValue);
-  }
-  
-  // Get the average to show later in screen
-  for (int x = 0 ; x < minValueVector.size() ; x++){
-    avgMinValue += minValueVector.get(x);
-  }
-  avgMinValue /= minValueVector.size();
-  
-  // Get standard deviation to show in screen
-  for(int x = 0 ; x < minValueVector.size() ; x++) {
-    sDeviation += Math.pow( minValueVector.get(x) - avgMinValue, 2);
-  }
-  sDeviation = sDeviation / minValueVector.size() - 1;
-  sDeviation = Math.sqrt(sDeviation);
-  
-  Collections.sort(minValueVector);  // Sort values of array from min to max
-  int hMinValue = minValueVector.get(0);  // Get min
-  int hMaxValue = minValueVector.get(minValueVector.size()-1);  // Get max
-  int hClasses = (int) Math.sqrt( (double)minValueVector.size() ); // Define the quantity of classes (divisions/bins of the histogram)
-  hClasses = (hClasses>20) ? 20 : hClasses; // Classes should not be greater than 20 or smaller than 3
-  hClasses = (hClasses<4) ? 4 : hClasses;
-  int hClassesWidth = ( hMaxValue - hMinValue ) / hClasses;  // Get the width of each bin
-  int hLimitSup = hMinValue + hClassesWidth;  //  Calculate the superior limit of the first class
-  
-  // Prepare the points for the third plot
-  float[] gaussianStack = new float[hClasses];  // This vector will store the quantity of points in each class
-  int gaussianCounter = 0;  // Point counter
-  
-  //  Divide and add each data point to its class
-  int j = 0, i = 0;
-  while ( j< (hClasses-1) ){
-     if ( minValueVector.get(i) > hLimitSup){
-       gaussianStack[j] = i - gaussianCounter;
-       gaussianCounter = i;
-       j++;
-       hLimitSup += hClassesWidth;
-     }
-     i++;
-  }
-  gaussianStack[j] = minValueVector.size() - gaussianCounter;
-  gaussianCounter = minValueVector.size();
-  
-  //  Forward code represents the data in the gaussianStack vector
-  GPointsArray points2 = new GPointsArray(gaussianStack.length);
-
-  for (int l = 0; l < gaussianStack.length; l++) {
-    points2.add(l + 0.5 - gaussianStack.length/2.0, gaussianStack[l]/gaussianCounter, hMinValue+l*hClassesWidth + "-" + (hMinValue+(l+1)*hClassesWidth) );
-  }
-
   // Setup for the histogram plot 
   plot2 = new GPlot(this);
   plot2.setPos(plotFromX+plotToX+100, plotFromY);
   plot2.setDim(plotToX-plotFromX, plotToY-plotFromY);
-  plot2.getTitle().setText("Seeds min values Gaussian distribution (" + str(gaussianCounter) + " points)");
+  plot2.getTitle().setText("Seeds delta values Gaussian distribution");
   plot2.getTitle().setTextAlignment(LEFT);
   plot2.getTitle().setRelativePos(0);
   plot2.getYAxis().getAxisLabel().setText("Relative probability");
   plot2.getYAxis().getAxisLabel().setTextAlignment(RIGHT);
   plot2.getYAxis().getAxisLabel().setRelativePos(1);
-  plot2.setPoints(points2);
+  //plot2.setPoints(points2);
+  
+  plot2.activateCentering(LEFT, GPlot.CTRLMOD);
+  
+}
+
+void plot2Draw() {
+  // Remove all layers to redraw all the histograms
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    dataFiles[x].removeHistogramLayers ();
+  }
+  
+  // Get info of all the files necesaries to configure the plot histogram
+  int[] pointsInfo = new int[3];
+  int hMinValue = 0xFFFFFF, hMaxValue = 0, hPoints = 0;
+  for (int x = 0 ; x <= dataFileCount ; x++) {
+    pointsInfo = dataFiles[x].getDeltaValuesInfo();  // get { numberOfDeltaValues , minDeltaValue, maxDeltaValue}
+    hPoints += pointsInfo[0];
+    if ( pointsInfo[1] < hMinValue)
+      hMinValue = pointsInfo[1];
+    if ( pointsInfo[2] > hMaxValue)
+      hMaxValue = pointsInfo[2];
+  }
+  
+  // Calculate histogram bin count and more
+  int hClasses = (int) Math.sqrt( (double)hPoints ); // Define the quantity of classes (divisions/bins of the histogram)
+  hClasses = (hClasses>20) ? 20 : hClasses; // Classes should not be greater than 20 or smaller than 3
+  hClasses = (hClasses<4) ? 4 : hClasses;
+  int hClassesWidth = (int)( (float)( (float)( (float)( hMaxValue - hMinValue ) / hClasses) +0.5) );  // Get the width of each bin
+  int hLimitSup = hMinValue + hClassesWidth;  //  Calculate the superior limit of the first class
+  
+  // Add layers of each file
+  for (int x = 0 ; x <= dataFileCount ; x++) {
+    dataFiles[x].addHistogramLayers (hClasses, hClassesWidth, hLimitSup, hMaxValue, hMinValue); //<>//
+  }
+  
   plot2.startHistograms(GPlot.VERTICAL);
   plot2.getHistogram().setDrawLabels(true);
   plot2.getHistogram().setRotateLabels(true);
@@ -176,15 +157,13 @@ void plot2SetConfig(){    // Histogram
     color(0, 0, 255, 150), color(0, 0, 255, 200)
   }
   );
-  plot2.activateCentering(LEFT, GPlot.CTRLMOD);
+  
+  // Get an array of all the min values of each valid seed
+  
+  // Get the average to show later in screen
+  
+  // Get standard deviation to show in screen
 }
-
-void plot2AddLayers(){
-  // Add layers corresponding to each dataFile that contains each valid Seed data set with each points to plot
-  for (DataFile f : dataFiles) {
-    f.addLayers();
-  }
-}*/
 
 void plot1SetConfig() {
   // Create a new plot and set its position on the screen
@@ -201,7 +180,7 @@ void plot1SetConfig() {
   plot1.activatePointLabels();
   plot1.activateZooming(1.2, CENTER, CENTER);
   plot1.activatePanning();
-} //<>//
+}
 
 void loadData(File selection) {
   if (selection == null) {
@@ -219,6 +198,9 @@ void loadData(File selection) {
     dataFiles[0].addLayers();
   }
   dataFiles[dataFileCount].addLayers();
+  
+  
+  plot2Draw();
   // Prepare for the next file
   dataFileCount++;
   
