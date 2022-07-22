@@ -35,7 +35,7 @@ class Seed {
     
     // Set layer Color
     int colorR, colorG, colorB, colorA;
-    colorA = 200; // color Alpha is transparency: 255 = opaque , 0 = translucent
+    colorA = 180; // color Alpha is transparency: 255 = opaque , 0 = translucent
     if (dataFileCount < 1){  // If only have one file, set a random color
       colorR = int(random(10,255));
       colorG = int(random(10,255));

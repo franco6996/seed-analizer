@@ -156,16 +156,20 @@ class DataFile {
        hLimitSup_ += hClassesWidth_;
     }
     
-    int hLocalClasses = hClassesLocalLimits[1] - hClassesLocalLimits[0];
-    int hLimitSup = hMinValue_ + hClassesWidth_ * hClassesLocalLimits[0];
+    int hLocalClasses = hClassesLocalLimits[1] - hClassesLocalLimits[0] + 1; //<>//
     
     // Prepare the points for the histogtram plot
     float[] gaussianStack = new float[hLocalClasses];  // This vector will store the quantity of points in each class
     int gaussianCounter = 0;  // Point counter
     
+    //TODO: implement new way to assign each value to the plot vector
+    int hLimitInf = hMinValue_ + hClassesWidth_ * ( hClassesLocalLimits[0] -1 );
+    int hLimitSup = hMinValue_ + hClassesWidth_ * hClassesLocalLimits[0];
+    
+    /*
     //  Divide and add each data point to its class
     int j = 0, i = 0;
-    while ( j< (hLocalClasses-1) ){
+    while ( j< (hLocalClasses) ){
        
        if ( deltaValueVector.get(i) > hLimitSup){
          gaussianStack[j] = i - gaussianCounter;
@@ -174,26 +178,44 @@ class DataFile {
          hLimitSup += hClassesWidth_;
        }
        i++;
-       /*if ( i == deltaValueVector.size() - 1)
-         break;*/
+       if ( i == deltaValueVector.size() )
+         break;
     }
     gaussianStack[j] = deltaValueVector.size() - gaussianCounter;
-    gaussianCounter = deltaValueVector.size();
+    gaussianCounter = deltaValueVector.size();*/ //<>//
     
     //  Forward code represents the data in the gaussianStack vector
-    GPointsArray points = new GPointsArray(gaussianStack.length); //<>//
-  
-    for (int l = 0; l < gaussianStack.length; l++) {
-      points.add(l + 0.5 - gaussianStack.length/2.0, gaussianStack[l]/gaussianCounter );
+    GPointsArray points = new GPointsArray(gaussianStack.length);
+    
+    int m = 0;
+    for (int l = hClassesLocalLimits[0] - 1; l < hClassesLocalLimits[1]; l++, m++) {
+      points.add( l, gaussianStack[m]/gaussianCounter );
     }
     
     String layerName = fileName + "." + str(fileIndex) ;
     plot2.addLayer(layerName, points);
+    
   }
   
   void removeHistogramLayers() {
     String layerName = fileName + "." + str(fileIndex) ;
     plot2.removeLayer ( layerName );
+  }
+  
+  void setHistogramColors () {
+    // Set layer Color
+    int colorR, colorG, colorB;
+    colorR = predefinedColorR[ fileIndex ];
+    colorG = predefinedColorG[ fileIndex ];
+    colorB = predefinedColorB[ fileIndex ];
+    
+    String layerName = fileName + "." + str(fileIndex) ;
+    
+    plot2.getHistogram(layerName).setBgColors(new color[] {
+    color(colorR, colorG, colorB, 150), color(colorR, colorG, colorB, 150), 
+    color(colorR, colorG, colorB, 150), color(colorR, colorG, colorB, 150) 
+    }
+    );
   }
   
   void addLayers () {
