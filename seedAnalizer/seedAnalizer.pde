@@ -44,7 +44,7 @@ void setup() {
   size(1600, 800);
   frameRate(30);
   background(255);
-  randomSeed(2);
+  randomSeed(99);
   
   // Set title bar and icon for Windows app
   PImage titlebaricon = loadImage("icon.png"); 
@@ -113,8 +113,9 @@ void plot2SetConfig(){    // Histogram
   plot2.getYAxis().getAxisLabel().setText("Relative probability");
   plot2.getYAxis().getAxisLabel().setTextAlignment(RIGHT);
   plot2.getYAxis().getAxisLabel().setRelativePos(1);
+  plot2.getYAxis().setLim(new float[] { 0, 1});
+  plot2.getYAxis().setNTicks( 10);
   //plot2.setPoints(points2);
-  
   plot2.activateCentering(LEFT, GPlot.CTRLMOD);
   
 }
@@ -146,17 +147,22 @@ void plot2Draw() {
   
   // Add layers of each file
   for (int x = 0 ; x <= dataFileCount ; x++) {
-    dataFiles[x].addHistogramLayers (hClasses, hClassesWidth, hLimitSup, hMaxValue, hMinValue); //<>//
+    dataFiles[x].addHistogramLayers (hClasses, hClassesWidth, hLimitSup, hMaxValue, hMinValue);
   }
   
   plot2.startHistograms(GPlot.VERTICAL);
   plot2.getHistogram().setDrawLabels(true);
   plot2.getHistogram().setRotateLabels(true);
   plot2.getHistogram().setBgColors(new color[] {
-    color(0, 0, 255, 50), color(0, 0, 255, 100), 
-    color(0, 0, 255, 150), color(0, 0, 255, 200)
+    color(100, 255, 255, 50), color(255, 0, 255, 100), 
+    color(255, 0, 255, 150), color(255, 0, 255, 200)
   }
   );
+  
+  // Set colors
+  for (int x = 0 ; x <= dataFileCount ; x++) {
+    dataFiles[x].setHistogramColors ();
+  }
   
   // Get an array of all the min values of each valid seed
   
@@ -175,6 +181,11 @@ void plot1SetConfig() {
   plot1.setTitleText("Overlaping all the Seeds");
   plot1.getXAxis().setAxisLabelText("Time [ms * 10]");
   plot1.getYAxis().setAxisLabelText("ADC raw value");
+  
+  plot1.getYAxis().setLim(new float[] { 0, 4100});
+  plot1.getYAxis().setNTicks( 10);
+  plot1.getXAxis().setLim(new float[] { 0, 100});
+  plot1.getXAxis().setNTicks( 10);
   
   // Set plot1 configs
   plot1.activatePointLabels();
@@ -198,7 +209,6 @@ void loadData(File selection) {
     dataFiles[0].addLayers();
   }
   dataFiles[dataFileCount].addLayers();
-  
   
   plot2Draw();
   // Prepare for the next file
