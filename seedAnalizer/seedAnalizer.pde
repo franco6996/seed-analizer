@@ -25,10 +25,11 @@ DataFile[] dataFiles;
 final int dataFilesMax = 6;  // This means 4 as max files to be loaded at the same time
 public int dataFileCount;  // Counts the files alredy loaded
 String[] column_compare = { "#", "timeStamp", "0"}; // format of .csv file to compare and validated added files.
+public int seedCounter = 0;
 
 // Predefined Plot Colors= {  R,   G,   B,Yell,Cyan,Mage,}
 int[] predefinedColorR = {  255,   0,   0, 255,   0, 255,};
-int[] predefinedColorG = {    0, 255,   0, 255, 255,   0,};
+int[] predefinedColorG = {    0, 200,   0, 210, 255,   0,};
 int[] predefinedColorB = {    0,   0, 255,   0, 255, 255,};
 
 // Define the coordinates where to plot
@@ -39,9 +40,10 @@ final int plotToY = 680;
 
 // Define the version SW
 final String swVersion = "v0.4b";
+boolean debug = true;
 
 void setup() {
-  size(1600, 800);
+  size(1600, 800); //<>//
   frameRate(30);
   background(255);
   randomSeed(99);
@@ -83,16 +85,55 @@ void draw() {
 
 void showInfoText() {
   
-  // Name of file selected
-  textAlign(RIGHT);
-  fill(0);
-  //text(fileName, width-10, height-10);  // Shows the selected file in screen
-  
   // Name and version of SW
   textAlign(LEFT);
   fill(0);
   text("Seed Analizer  " + swVersion , 10, height-10);
   
+  // Show FPS Counter if i'm in debug
+  textAlign(CENTER);
+  fill(0);
+  if ( debug )
+    text("FPS: " + nf(frameRate, 0, 2) , width/2 , height-10);
+  
+  // Update title seeds number
+  plot1.setTitleText("Overlaping " + str( seedCounter) + " Seeds");
+  
+  // Name of file selected
+  PFont font = createFont("Consolas Bold", 12);
+  textFont(font);
+  textAlign(RIGHT);
+  int positionX = width-10;
+  if ( dataFileCount == 1) {
+    fill(0);
+    String fileName = dataFiles[0].getFileName();
+    text( fileName, positionX, height-10);  // Shows the selected file in screen
+    positionX -= fileName.length() * 7;
+    font = createFont("Consolas", 12);
+    textFont(font);
+    text("Loaded files: ", positionX, height-10);
+  }
+  else if (dataFileCount > 1) {
+    String fileName;
+    for (int x = 0 ; x < dataFileCount ; x++) { //<>//
+      fileName = dataFiles[x].getFileName ();
+      if ( x > 0 )
+        fileName += ", ";
+      int colorR, colorG, colorB;
+      colorR = predefinedColorR[ x ];
+      colorG = predefinedColorG[ x ];
+      colorB = predefinedColorB[ x ];
+      fill( colorR, colorG, colorB);
+      text(fileName, positionX, height-10);
+      positionX -= fileName.length() * 7;
+    }
+    fill(0);
+    font = createFont("Consolas", 12);
+    textFont(font);
+    text("Loaded files: ", positionX, height-10);
+  }
+  font = createFont("Consolas", 12);
+  textFont(font);
   /*
     // Average and Standard Deviation
     textAlign(RIGHT);
@@ -146,7 +187,7 @@ void plot2Draw() {
   int hLimitSup = hMinValue + hClassesWidth;  //  Calculate the superior limit of the first class
   
   // Add layers of each file
-  for (int x = 0 ; x <= dataFileCount ; x++) { //<>//
+  for (int x = 0 ; x <= dataFileCount ; x++) {
     dataFiles[x].addHistogramLayers (hClasses, hClassesWidth, hLimitSup, hMaxValue, hMinValue);
   }
   
@@ -214,7 +255,11 @@ void loadData(File selection) {
   // Prepare for the next file
   dataFileCount++;
   
-  
+  // To update title seeds number
+  seedCounter = 0;
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    seedCounter += dataFiles[x].getValidSeeds ();
+  }
   
   loop();
 }

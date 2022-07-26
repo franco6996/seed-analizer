@@ -233,4 +233,16 @@ class DataFile {
     }
   }
   
+  // Count all the valid seeds in file
+  int getValidSeeds (){
+    int validSeedsCounter = 0;
+    // Remove one layer for every seed saved in file
+    for (Seed s : seeds) {
+      if( s.getValidSeed() == true ) {
+       validSeedsCounter++;
+      }
+    }
+    return validSeedsCounter;
+  }
+  
 }

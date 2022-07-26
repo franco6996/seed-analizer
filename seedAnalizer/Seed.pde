@@ -70,4 +70,11 @@ class Seed {
     
     return deltaV;
   }
+  
+  // Remove one leyer (one seed) from the plot
+  boolean getValidSeed () {
+    
+    return validSeed;
+  }
+  
 }
