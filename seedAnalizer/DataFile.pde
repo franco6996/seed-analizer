@@ -156,39 +156,39 @@ class DataFile {
        hLimitSup_ += hClassesWidth_;
     }
     
-    int hLocalClasses = hClassesLocalLimits[1] - hClassesLocalLimits[0] + 1; //<>//
+    int hLocalClasses = hClassesLocalLimits[1] - hClassesLocalLimits[0] + 1;
     
     // Prepare the points for the histogtram plot
     float[] gaussianStack = new float[hLocalClasses];  // This vector will store the quantity of points in each class
     int gaussianCounter = 0;  // Point counter
     
-    //TODO: implement new way to assign each value to the plot vector
+    // Asign the values to each class minus the last
     int hLimitInf = hMinValue_ + hClassesWidth_ * ( hClassesLocalLimits[0] -1 );
     int hLimitSup = hMinValue_ + hClassesWidth_ * hClassesLocalLimits[0];
     
-    /*
-    //  Divide and add each data point to its class
-    int j = 0, i = 0;
-    while ( j< (hLocalClasses) ){
-       
-       if ( deltaValueVector.get(i) > hLimitSup){
-         gaussianStack[j] = i - gaussianCounter;
-         gaussianCounter = i;
-         j++;
-         hLimitSup += hClassesWidth_;
-       }
-       i++;
-       if ( i == deltaValueVector.size() )
-         break;
+    for ( int classesIndex = 0; classesIndex < (hLocalClasses - 1) ; classesIndex++ ) {
+      for ( int vectorIndex = 0; vectorIndex < deltaValueVector.size() ; vectorIndex++ ) {
+        if ( deltaValueVector.get(vectorIndex) >= hLimitInf && deltaValueVector.get(vectorIndex) < hLimitSup) {
+          gaussianStack[classesIndex]++;
+          gaussianCounter++;
+        }
+      }
+      hLimitInf = hLimitSup;
+      hLimitSup += hClassesWidth_;
     }
-    gaussianStack[j] = deltaValueVector.size() - gaussianCounter;
-    gaussianCounter = deltaValueVector.size();*/ //<>//
+    // The next is for assign the values for the last local class
+    for ( int vectorIndex = 0; vectorIndex < deltaValueVector.size() ; vectorIndex++ ) {
+        if ( deltaValueVector.get(vectorIndex) >= hLimitInf && deltaValueVector.get(vectorIndex) <= hLimitSup) {
+          gaussianStack[ (hLocalClasses - 1) ]++;
+          gaussianCounter++;
+        }
+    }
     
     //  Forward code represents the data in the gaussianStack vector
     GPointsArray points = new GPointsArray(gaussianStack.length);
     
     int m = 0;
-    for (int l = hClassesLocalLimits[0] - 1; l < hClassesLocalLimits[1]; l++, m++) {
+    for (int l = hClassesLocalLimits[0] ; l <= hClassesLocalLimits[1]; l++, m++) {
       points.add( l, gaussianStack[m]/gaussianCounter );
     }
     

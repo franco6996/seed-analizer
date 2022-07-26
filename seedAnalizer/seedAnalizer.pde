@@ -3,11 +3,11 @@
  *
  * Here is what the CSV looks like:
  *
- #,timeStamp,0,1,2,3,...,100
- 0,103,2000,2300,2200,2100,...,2050
- 1,137,1500,1600,1700,1650,...,1680
- 2,235,1800,1830,1790,2000,...,3500
- 3,179,50,150,200,400,...,350
+   #,timeStamp,0,1,2,3,...,100
+   0,103,2000,2300,2200,2100,...,2050
+   1,137,1500,1600,1700,1650,...,1680
+   2,235,1800,1830,1790,2000,...,3500
+   3,179,50,150,200,400,...,350
  */
 
 // Libraries
@@ -114,7 +114,7 @@ void plot2SetConfig(){    // Histogram
   plot2.getYAxis().getAxisLabel().setTextAlignment(RIGHT);
   plot2.getYAxis().getAxisLabel().setRelativePos(1);
   plot2.getYAxis().setLim(new float[] { 0, 1});
-  plot2.getYAxis().setNTicks( 10);
+  //plot2.getYAxis().setNTicks( 10);
   //plot2.setPoints(points2);
   plot2.activateCentering(LEFT, GPlot.CTRLMOD);
   
@@ -142,11 +142,11 @@ void plot2Draw() {
   int hClasses = (int) Math.sqrt( (double)hPoints ); // Define the quantity of classes (divisions/bins of the histogram)
   hClasses = (hClasses>20) ? 20 : hClasses; // Classes should not be greater than 20 or smaller than 3
   hClasses = (hClasses<4) ? 4 : hClasses;
-  int hClassesWidth = (int)( (float)( (float)( (float)( hMaxValue - hMinValue ) / hClasses) +0.5) );  // Get the width of each bin
+  int hClassesWidth = ceil( (float)(  (float)( hMaxValue - hMinValue ) / hClasses) );  // Get the width of each bin
   int hLimitSup = hMinValue + hClassesWidth;  //  Calculate the superior limit of the first class
   
   // Add layers of each file
-  for (int x = 0 ; x <= dataFileCount ; x++) {
+  for (int x = 0 ; x <= dataFileCount ; x++) { //<>//
     dataFiles[x].addHistogramLayers (hClasses, hClassesWidth, hLimitSup, hMaxValue, hMinValue);
   }
   
