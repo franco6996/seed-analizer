@@ -29,7 +29,7 @@ class Seed {
     int nPoints = value.length;                       // number of value points in cvs file
     GPointsArray points = new GPointsArray(nPoints);  // points of plot
     for (int i = 0; i < nPoints; i++) {
-      points.add(i, value[i]);
+      points.add(i, value[i], "("+ i +","+ value[i] +") "+layerName);
     }
     plot1.addLayer(layerName, points);     // add points to the layer
     
@@ -48,6 +48,10 @@ class Seed {
     }
     plot1.getLayer(layerName).setLineColor(color(colorR, colorG, colorB, colorA));
     plot1.getLayer(layerName).setPointColor(color(colorR, colorG, colorB, colorA));
+    plot1.getLayer(layerName).setFontColor(50);
+    plot1.getLayer(layerName).setFontSize(10);
+    plot1.getLayer(layerName).setFontName("Consolas");
+    plot1.getLayer(layerName).setLabelBgColor(220);
   }
   
   // Remove one leyer (one seed) from the plot

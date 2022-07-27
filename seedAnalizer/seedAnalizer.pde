@@ -76,6 +76,18 @@ void draw() {
   background(255);  // clear the previus draw
   
   // Draw the Plot
+    //plot1.defaultDraw();
+    plot1.beginDraw();
+    plot1.drawBackground();
+    plot1.drawBox();
+    plot1.drawYAxis();
+    plot1.drawXAxis();
+    plot1.drawTitle();
+    plot1.drawPoints();
+    plot1.drawLines();
+    plot1.drawLabels();
+    plot1.endDraw();
+    
     plot2.beginDraw();
     plot2.drawBackground();
     plot2.drawBox();
@@ -241,6 +253,7 @@ void plot1SetConfig() {
   // Set plot1 configs
   plot1.activatePointLabels();
   plot1.activateZooming(1.2, CENTER, CENTER);
+  plot1.activatePanning();
 }
 
 void loadData(File selection) {
