@@ -42,8 +42,13 @@ final int plotToY = 680;
 final String swVersion = "v0.4b";
 boolean debug = true;
 
+void settings() {
+  size(1600, 800);
+  smooth(2); //<>//
+}
+
 void setup() {
-  size(1600, 800); //<>//
+   //<>//
   frameRate(30);
   background(255);
   randomSeed(99);
@@ -97,7 +102,8 @@ void showInfoText() {
     text("FPS: " + nf(frameRate, 0, 2) , width/2 , height-10);
   
   // Update title seeds number
-  plot1.setTitleText("Overlaping " + str( seedCounter) + " Seeds");
+  if( (frameCount % 300) == 0 )
+    plot1.setTitleText("Overlaping " + str( seedCounter) + " Seeds");
   
   // Name of file selected
   PFont font = createFont("Consolas Bold", 12);
@@ -298,3 +304,12 @@ void mousePressed() {
   // And reloading it
   loadData();
 }*/
+
+// This function calls the main sketch code but with a uiScale parameter to work well on scaled displays in exported apps.
+public static void main(String[] args) {
+
+    System.setProperty("sun.java2d.uiScale", "1.0");
+    String[] mainSketch = concat(new String[] { seedAnalizer.class.getCanonicalName() }, args);
+    PApplet.main(mainSketch);
+    
+}
