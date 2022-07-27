@@ -76,11 +76,12 @@ void draw() {
   background(255);  // clear the previus draw
   
   // Draw the Plot
-    plot1.defaultDraw();
     plot2.beginDraw();
     plot2.drawBackground();
     plot2.drawBox();
     plot2.drawYAxis();
+    plot2.drawGridLines(GPlot.HORIZONTAL);
+    plot2.setGridLineWidth(0.5);
     plot2.drawTitle();
     plot2.drawHistograms();
     plot2.endDraw();
@@ -161,9 +162,9 @@ void plot2SetConfig(){    // Histogram
   plot2.getYAxis().getAxisLabel().setTextAlignment(RIGHT);
   plot2.getYAxis().getAxisLabel().setRelativePos(1);
   plot2.getYAxis().setLim(new float[] { 0, 1});
-  //plot2.getYAxis().setNTicks( 10);
-  //plot2.setPoints(points2);
+  plot2.getYAxis().setNTicks( 6);
   plot2.activateCentering(LEFT, GPlot.CTRLMOD);
+  plot2.activatePointLabels( LEFT, GPlot.NONE);
   
 }
 
@@ -197,16 +198,19 @@ void plot2Draw() {
     dataFiles[x].addHistogramLayers (hClasses, hClassesWidth, hLimitSup, hMaxValue, hMinValue);
   }
   
+  //Set Labels
+   GPointsArray points = new GPointsArray(hClasses+1);
+  for (int l = 0; l <= hClasses; l++) {
+    points.add(l+0.5 , 0, str(hMinValue+l*hClassesWidth) );
+  }
+  plot2.setPoints(points);
+  
+  // Plot
   plot2.startHistograms(GPlot.VERTICAL);
   plot2.getHistogram().setDrawLabels(true);
-  plot2.getHistogram().setRotateLabels(true);
-  plot2.getHistogram().setBgColors(new color[] {
-    color(100, 255, 255, 50), color(255, 0, 255, 100), 
-    color(255, 0, 255, 150), color(255, 0, 255, 200)
-  }
-  );
+  plot2.getHistogram().setRotateLabels(false);
   
-  // Set colors
+  // Set layers colors
   for (int x = 0 ; x <= dataFileCount ; x++) {
     dataFiles[x].setHistogramColors ();
   }
@@ -237,7 +241,6 @@ void plot1SetConfig() {
   // Set plot1 configs
   plot1.activatePointLabels();
   plot1.activateZooming(1.2, CENTER, CENTER);
-  plot1.activatePanning();
 }
 
 void loadData(File selection) {
