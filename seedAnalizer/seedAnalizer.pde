@@ -3,11 +3,11 @@
  *
  * Here is what the CSV looks like:
  *
- #,timeStamp,0,1,2,3,...,100
- 0,103,2000,2300,2200,2100,...,2050
- 1,137,1500,1600,1700,1650,...,1680
- 2,235,1800,1830,1790,2000,...,3500
- 3,179,50,150,200,400,...,350
+   #,timeStamp,0,1,2,3,...,100
+   0,103,2000,2300,2200,2100,...,2050
+   1,137,1500,1600,1700,1650,...,1680
+   2,235,1800,1830,1790,2000,...,3500
+   3,179,50,150,200,400,...,350
  */
 
 // Libraries
@@ -20,14 +20,18 @@ import java.lang.Math;
 // Grafica objects
 GPlot plot1, plot2;
 
-// An Array of Bubble objects
-Seed[] seeds;
+// An Array of dataFiles (.csv) to be loaded with seeds data each one
+DataFile[] dataFiles;
+final int dataFilesMax = 6;  // This means 4 as max files to be loaded at the same time
+public int dataFileCount;  // Counts the files alredy loaded
+String[] column_compare = { "#", "timeStamp", "0"}; // format of .csv file to compare and validated added files.
+public int seedCounter = 0;
+public float hMaxProbValue = 0;
 
-// A Table object
-public Table table;
-public boolean plotDataLoaded;
-public String fileNamePath = "", fileName = "";
-public double avgMinValue, sDeviation;
+// Predefined Plot Colors= {  R,   G,   B,Yell,Cyan,Mage,}
+int[] predefinedColorR = {  255,   0,   0, 255,   0, 255,};
+int[] predefinedColorG = {    0, 200,   0, 210, 255,   0,};
+int[] predefinedColorB = {    0,   0, 255,   0, 255, 255,};
 
 // Define the coordinates where to plot
 final int plotFromX = 0;
@@ -36,13 +40,19 @@ final int plotToX = 680;
 final int plotToY = 680;
 
 // Define the version SW
-final String swVersion = "v0.3b";
+final String swVersion = "v0.4b";
+boolean debug = true;
+
+void settings() {
+  size(1600, 800);
+  smooth(2);
+}
 
 void setup() {
-  size(1600, 800);
-  frameRate(24);
+  
+  frameRate(30);
   background(255);
-  randomSeed(2);
+  randomSeed(99);
   
   // Set title bar and icon for Windows app
   PImage titlebaricon = loadImage("icon.png"); 
@@ -51,209 +61,261 @@ void setup() {
   }
   surface.setTitle("Seed Analizer (" + swVersion + ")" ); 
   
-  plotDataLoaded = false;
+  dataFiles = new DataFile[dataFilesMax];
+  dataFileCount = 0;
+  
+  plot1SetConfig();
+  plot2SetConfig();
+  
+  noLoop();
   File start1 = new File(sketchPath("")+"/*.csv"); 
   selectInput("Select a .csv file to analize", "loadData", start1);
-
+  
+  PFont font = createFont("Consolas", 12);
+  textFont(font);
 }
 
 void draw() {
   background(255);  // clear the previus draw
   
   // Draw the Plot
-  if (plotDataLoaded == true) {
-    plot1.defaultDraw();
+    //plot1.defaultDraw();
+    plot1.beginDraw();
+    plot1.drawBackground();
+    plot1.drawBox();
+    plot1.drawYAxis();
+    plot1.drawXAxis();
+    plot1.drawTitle();
+    plot1.drawPoints();
+    plot1.drawLines();
+    plot1.drawLabels();
+    plot1.endDraw();
+    
     plot2.beginDraw();
     plot2.drawBackground();
     plot2.drawBox();
     plot2.drawYAxis();
+    plot2.drawGridLines(GPlot.HORIZONTAL);
+    plot2.setGridLineWidth(0.5);
     plot2.drawTitle();
     plot2.drawHistograms();
     plot2.endDraw();
-  }
+  
+  // Draw probabilistic info
+  drawMath();
+  
   // Show information text arround the window
   showInfoText();
 }
 
+void drawMath() {
+  textAlign(RIGHT);
+  int positionX = width-20;
+  int positionY = 40;
+  int wideForm = 160;
+  int heightForm = 70;
+  
+  for (int x = 0; x < dataFileCount ; x++ ) {
+    //Drawing one rectangle
+    noFill();
+    stroke(200);
+    rect(positionX, positionY, -wideForm, heightForm);
+    line(positionX, positionY+20, positionX-wideForm, positionY+20);
+    fill(0);
+    textAlign(CENTER);
+    if ( dataFileCount > 1 )
+      fill( predefinedColorR[ x ], predefinedColorG[ x ], predefinedColorB[ x ]);
+    text(dataFiles[x].getFileName(), positionX - wideForm/2, positionY+15);
+    fill(0);
+    float avg = dataFiles[x].getAvgDeltaValue();
+    float sDeviation = dataFiles[x].getSDeviation();
+    textAlign(RIGHT);
+    text( "Average Delta: " + nf(avg,0,2),positionX-5, positionY+40);
+    text( "SD: " +nf(sDeviation,0,2), positionX-5, positionY+60);
+    
+    // For the next loop
+    positionY += heightForm + 20;
+  }
+}
+
 void showInfoText() {
+  
+  // Show help
+  textAlign(LEFT);
+  fill(0);
+  text("Press 'n' to add a new file to compare", 10, height-10);
+  
+  // Show FPS Counter if i'm in debug
+  textAlign(LEFT);
+  fill(150);
+  if ( debug )
+    text("FPS: " + nf(frameRate, 0, 2) , 10 , 10);
+  
+  // Update title seeds number
+  if( dataFileCount > 0 )
+    plot1.setTitleText("Overlaping " + str( seedCounter) + " Seeds");
   
   // Name of file selected
   textAlign(RIGHT);
   fill(0);
-  text(fileName, width-10, height-10);  // Shows the selected file in screen
-  
-  // Name and version of SW
-  textAlign(LEFT);
-  fill(0);
-  text("Seed Analizer  " + swVersion , 10, height-10);
-  
-  if (plotDataLoaded == true) {
-    // Average and Standard Deviation
-    textAlign(RIGHT);
-    fill(0);
-    text("Mean = " + nf((float)avgMinValue,0,2) , width-80 , plotFromY+60);
-    text("SDeviation = " + nf((float)sDeviation,0,2) , width-80 , plotFromY+80);
-  }
+  text( dataFileCount +" file/s loaded.", width-10 , height-10);
 }
 
-void loadPlot2Data(){    // Histogram
-  ArrayList<Integer> minValueVector = new ArrayList<Integer>();
-  
-  // Get an array of all the min values of each valid seed
-  for (Seed s : seeds) {
-    int minValue = s.getValueMin();
-    if (minValue>0)
-      minValueVector.add(minValue);
-  }
-  
-  // Get the average to show later in screen
-  for (int x = 0 ; x < minValueVector.size() ; x++){
-    avgMinValue += minValueVector.get(x);
-  }
-  avgMinValue /= minValueVector.size(); //<>//
-  
-  // Get standard deviation to show in screen
-  for(int x = 0 ; x < minValueVector.size() ; x++) { //<>//
-    sDeviation += Math.pow( minValueVector.get(x) - avgMinValue, 2);
-  }
-  sDeviation = sDeviation / minValueVector.size() - 1;
-  sDeviation = Math.sqrt(sDeviation);
-  
-  Collections.sort(minValueVector);  // Sort values of array from min to max
-  int hMinValue = minValueVector.get(0);  // Get min
-  int hMaxValue = minValueVector.get(minValueVector.size()-1);  // Get max
-  int hClasses = (int) Math.sqrt( (double)minValueVector.size() ); // Define the quantity of classes (divisions/bins of the histogram)
-  hClasses = (hClasses>20) ? 20 : hClasses; // Classes should not be greater than 20 or smaller than 3
-  hClasses = (hClasses<4) ? 4 : hClasses;
-  int hClassesWidth = ( hMaxValue - hMinValue ) / hClasses;  // Get the width of each bin
-  int hLimitSup = hMinValue + hClassesWidth;  //  Calculate the superior limit of the first class
-  
-  // Prepare the points for the third plot
-  float[] gaussianStack = new float[hClasses];  // This vector will store the quantity of points in each class //<>//
-  int gaussianCounter = 0;  // Point counter
-  
-  //  Divide and add each data point to its class
-  int j = 0, i = 0;
-  while ( j< (hClasses-1) ){
-     if ( minValueVector.get(i) > hLimitSup){
-       gaussianStack[j] = i - gaussianCounter;
-       gaussianCounter = i;
-       j++;
-       hLimitSup += hClassesWidth;
-     }
-     i++;
-  }
-  gaussianStack[j] = minValueVector.size() - gaussianCounter;
-  gaussianCounter = minValueVector.size();
-  
-  //  Forward code represents the data in the gaussianStack vector
-  GPointsArray points2 = new GPointsArray(gaussianStack.length);
-
-  for (int l = 0; l < gaussianStack.length; l++) {
-    points2.add(l + 0.5 - gaussianStack.length/2.0, gaussianStack[l]/gaussianCounter, hMinValue+l*hClassesWidth + "-" + (hMinValue+(l+1)*hClassesWidth) );
-  }
-
+void plot2SetConfig(){    // Histogram
   // Setup for the histogram plot 
   plot2 = new GPlot(this);
-  plot2.setPos(plotFromX+plotToX+100, plotFromY);
-  plot2.setDim(plotToX-plotFromX, plotToY-plotFromY);
-  plot2.getTitle().setText("Seeds min values Gaussian distribution (" + str(gaussianCounter) + " points)");
+  plot2.setPos(plotToX+75, plotFromY);
+  plot2.setDim( (plotToX-plotFromX) * 0.85 , plotToY-plotFromY);
+  plot2.getTitle().setText("Seeds delta values Gaussian distribution");
   plot2.getTitle().setTextAlignment(LEFT);
   plot2.getTitle().setRelativePos(0);
   plot2.getYAxis().getAxisLabel().setText("Relative probability");
   plot2.getYAxis().getAxisLabel().setTextAlignment(RIGHT);
   plot2.getYAxis().getAxisLabel().setRelativePos(1);
-  plot2.setPoints(points2);
-  plot2.startHistograms(GPlot.VERTICAL);
-  plot2.getHistogram().setDrawLabels(true);
-  plot2.getHistogram().setRotateLabels(true);
-  plot2.getHistogram().setBgColors(new color[] {
-    color(0, 0, 255, 50), color(0, 0, 255, 100), 
-    color(0, 0, 255, 150), color(0, 0, 255, 200)
-  }
-  );
+  plot2.getYAxis().setLim(new float[] { 0, 1});
+  plot2.setVerticalAxesNTicks( 6);
   plot2.activateCentering(LEFT, GPlot.CTRLMOD);
+  plot2.activatePointLabels( LEFT, GPlot.NONE);
+  
 }
 
-void loadPlot1Data() {
+void plot2Draw() {
+  // Remove all layers to redraw all the histograms
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    dataFiles[x].removeHistogramLayers ();
+  }
+  
+  // Get info of all the files necesaries to configure the plot histogram
+  int[] pointsInfo = new int[3];
+  int hMinValue = 0xFFFFFF, hMaxValue = 0, hPoints = 0;
+  for (int x = 0 ; x <= dataFileCount ; x++) {
+    pointsInfo = dataFiles[x].getDeltaValuesInfo();  // get { numberOfDeltaValues , minDeltaValue, maxDeltaValue}
+    hPoints += pointsInfo[0];
+    if ( pointsInfo[1] < hMinValue)
+      hMinValue = pointsInfo[1];
+    if ( pointsInfo[2] > hMaxValue)
+      hMaxValue = pointsInfo[2];
+  }
+  
+  // Calculate histogram bin count and more
+  int hClasses = (int) Math.sqrt( (double)hPoints ); // Define the quantity of classes (divisions/bins of the histogram)
+  hClasses = (hClasses>20) ? 20 : hClasses; // Classes should not be greater than 20 or smaller than 3
+  hClasses = (hClasses<4) ? 4 : hClasses;
+  int hClassesWidth = ceil( (float)(  (float)( hMaxValue - hMinValue ) / hClasses) );  // Get the width of each bin
+  int hLimitSup = hMinValue + hClassesWidth;  //  Calculate the superior limit of the first class
+  
+  // Add layers of each file
+  for (int x = 0 ; x <= dataFileCount ; x++) {
+    dataFiles[x].addHistogramLayers (hClasses, hClassesWidth, hLimitSup, hMaxValue, hMinValue);
+  }
+  
+  //Set Axis Labels
+   GPointsArray points = new GPointsArray(hClasses+1);
+  for (int l = 0; l <= hClasses; l++) {
+    points.add(l+0.5 , 0, str(hMinValue+l*hClassesWidth) );
+  }
+  plot2.setPoints(points);
+  
+  // Plot
+  plot2.startHistograms(GPlot.VERTICAL);
+  plot2.getHistogram().setDrawLabels(true);
+  plot2.getHistogram().setRotateLabels(false);
+  
+  // Set layers colors
+  for (int x = 0 ; x <= dataFileCount ; x++) {
+    dataFiles[x].setHistogramColors ();
+  }
+  
+  float max = 0.1;
+  while (hMaxProbValue > max) {
+    max += 0.05;
+  }
+  int divisions = 5;
+  if (max > 0.5)
+    divisions = 10;
+  float[] ticks = new float[divisions+1];
+  ticks[0] = 0;
+  for ( int i = 1; i <= divisions ; i++){
+    float aux = (max / divisions) * i;
+    aux = round( aux * 100);
+    aux /= 100;
+    ticks [i] = aux;
+  }
+  plot2.setVerticalAxesTicks( ticks ); //<>//
+  
+  // Get an array of all the min values of each valid seed
+  
+  // Get the average to show later in screen
+  
+  // Get standard deviation to show in screen
+}
+
+void plot1SetConfig() {
   // Create a new plot and set its position on the screen
   plot1 = new GPlot(this);
   plot1.setPos(plotFromX, plotFromY);
   plot1.setDim( plotToX-plotFromX, plotToY-plotFromY);
+  
   // Set the plot title and the axis labels
-  plot1.setTitleText("Overlaping Seeds from '" + fileName + "'");
+  plot1.setTitleText("Overlaping all the Seeds");
   plot1.getXAxis().setAxisLabelText("Time [ms * 10]");
   plot1.getYAxis().setAxisLabelText("ADC raw value");
-  // Add one layer for every seed
-  for (Seed s : seeds) {
-    s.displayLayer();
-  }
+  
+  plot1.getYAxis().setLim(new float[] { 0, 4100});
+  plot1.getYAxis().setNTicks( 10);
+  plot1.getXAxis().setLim(new float[] { 0, 100});
+  plot1.getXAxis().setNTicks( 10);
+  
   // Set plot1 configs
   plot1.activatePointLabels();
   plot1.activateZooming(1.2, CENTER, CENTER);
   plot1.activatePanning();
-  
-  
 }
 
 void loadData(File selection) {
   if (selection == null) {
-    javax.swing.JOptionPane.showMessageDialog(null, "No file selected.", "Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-    System.exit(0);
+    javax.swing.JOptionPane.showMessageDialog(null, "No file selected.", "File Input Error", javax.swing.JOptionPane.WARNING_MESSAGE);
+    return;
   }
-  // Get the name of the selected file
-  fileNamePath = selection.getAbsolutePath();
-  fileName = selection.getName();
+  String fileName = selection.getName(), fileNamePath = selection.getAbsolutePath();
   
-  // Load CSV file into a Table object
-  // "header" option indicates the file has a header row
-  table = loadTable(fileNamePath, "header");
+  // Initialize the new file
+  dataFiles[dataFileCount] = new DataFile( fileName, fileNamePath );
   
-  // Data file validation
-  String[] column_titles; 
-  String[] column_compare = { "#", "timeStamp", "0"}; 
-  try {
-    java.lang.reflect.Field f = table.getClass().getDeclaredField("columnTitles");
-    f.setAccessible(true);
-    column_titles = (String[]) f.get(table);
-    for (int i = 0; i<column_compare.length; i++ ) {
-      if ( ! column_titles[i].equals(column_compare[i]) ) {
-        javax.swing.JOptionPane.showMessageDialog(null, "It seems that the .csv file format is incorrect.", "Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-        System.exit(0);
-      }
-    }
-  } 
-  catch (Exception exc) {
-    exc.printStackTrace();
+  // Add Layers of the new file selected
+  if ( dataFileCount == 1) {        // if enter the multiple file mode, redraw the first plot
+    dataFiles[0].removeLayers();    //  so the color indicates different files
+    dataFiles[0].addLayers();
+  }
+  dataFiles[dataFileCount].addLayers();
+  
+  plot2Draw();
+  // Prepare for the next file
+  dataFileCount++;
+  
+  // To update title seeds number
+  seedCounter = 0;
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    seedCounter += dataFiles[x].getValidSeeds ();
+    dataFiles[x].calcSDeviation();
   }
   
-  // The size of the array of Bubble objects is determined by the total number of rows in the CSV
-  seeds = new Seed[table.getRowCount()]; 
-
-  // You can access iterate over all the rows in a table
-  int rowCount = 0;
-  for (TableRow row : table.rows()) {
-    // You can access the fields via their column name (or index)
-    int seedNumber = row.getInt("#");               //get the item number
-    int seedTimeStamp = row.getInt("timeStamp");    //get the timeStamp
-    
-    int[] seedValueArray = new int[101];
-    for(int i = 0; i<101; i++){
-      seedValueArray[i] = row.getInt(str(i));           //get an array of the 101 values, the 50th its supoused to be the min value of each row
-    }
-    
-    // Make a Seed object out of the data read
-    seeds[rowCount] = new Seed(seedNumber, seedTimeStamp, seedValueArray);
-    rowCount++;
-  }
-  
-  // Load the new data to the plot
-  loadPlot1Data();
-  loadPlot2Data();
-  
-  // Set the flag that mark if its ready to plot
-  plotDataLoaded = true;
+  loop();
 }
+
+// Pressing 'n' will bring the window to select a new file to add to the plot
+void keyPressed() {
+  if (key == 'n') {
+    if ( dataFileCount >= dataFilesMax ) {
+      javax.swing.JOptionPane.showMessageDialog(null, "Max number of files reached.", "File Input Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    } else {
+      noLoop();
+      File start1 = new File(sketchPath("")+"/*.csv");
+      selectInput("Select a .csv file to analize", "loadData", start1);
+    }
+  }
+}
+
 /*
 void mousePressed() {
   // Create a new row
@@ -275,3 +337,12 @@ void mousePressed() {
   // And reloading it
   loadData();
 }*/
+
+// This function calls the main sketch code but with a uiScale parameter to work well on scaled displays in exported apps.
+public static void main(String[] args) {
+
+    System.setProperty("sun.java2d.uiScale", "1.0");
+    String[] mainSketch = concat(new String[] { seedAnalizer.class.getCanonicalName() }, args);
+    PApplet.main(mainSketch);
+    
+}
