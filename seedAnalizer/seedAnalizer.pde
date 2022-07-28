@@ -44,11 +44,11 @@ boolean debug = true;
 
 void settings() {
   size(1600, 800);
-  smooth(2); //<>//
+  smooth(2);
 }
 
 void setup() {
-   //<>//
+  
   frameRate(30);
   background(255);
   randomSeed(99);
@@ -107,42 +107,32 @@ void draw() {
 
 void drawMath() {
   textAlign(RIGHT);
-  int positionX = width-30;
+  int positionX = width-20;
   int positionY = 40;
-  int wideForm = 180;
+  int wideForm = 160;
   int heightForm = 70;
-  if ( dataFileCount == 1) {
+  
+  for (int x = 0; x < dataFileCount ; x++ ) {
+    //Drawing one rectangle
     noFill();
     stroke(200);
     rect(positionX, positionY, -wideForm, heightForm);
     line(positionX, positionY+20, positionX-wideForm, positionY+20);
     fill(0);
     textAlign(CENTER);
-    text(dataFiles[0].getFileName(), positionX - wideForm/2, positionY+15);
-    float avg = dataFiles[0].getAvgDeltaValue();
-    float sDeviation = dataFiles[0].getSDeviation();
+    if ( dataFileCount > 1 )
+      fill( predefinedColorR[ x ], predefinedColorG[ x ], predefinedColorB[ x ]);
+    text(dataFiles[x].getFileName(), positionX - wideForm/2, positionY+15);
+    fill(0);
+    float avg = dataFiles[x].getAvgDeltaValue();
+    float sDeviation = dataFiles[x].getSDeviation();
     textAlign(RIGHT);
     text( "Average Delta: " + nf(avg,0,2),positionX-5, positionY+40);
     text( "SD: " +nf(sDeviation,0,2), positionX-5, positionY+60);
     
-  }/*
-  else if (dataFileCount > 1) {
-    String fileName;
-    for (int x = 0 ; x < dataFileCount ; x++) {
-      fileName = dataFiles[x].getFileName ();
-      if ( x > 0 )
-        fileName += ", ";
-      int colorR, colorG, colorB;
-      colorR = predefinedColorR[ x ];
-      colorG = predefinedColorG[ x ];
-      colorB = predefinedColorB[ x ];
-      fill( colorR, colorG, colorB);
-      text(fileName, positionX, height-10);
-      positionX -= fileName.length() * 7;
+    // For the next loop
+    positionY += heightForm + 20;
     }
-    fill(0);
-    text("Loaded files: ", positionX, height-10);
-  }*/
 }
 
 void showInfoText() {
@@ -163,54 +153,16 @@ void showInfoText() {
     plot1.setTitleText("Overlaping " + str( seedCounter) + " Seeds");
   
   // Name of file selected
-  PFont font = createFont("Consolas Bold", 12);
-  textFont(font);
   textAlign(RIGHT);
-  int positionX = width-10;
-  if ( dataFileCount == 1) {
     fill(0);
-    String fileName = dataFiles[0].getFileName();
-    text( fileName, positionX, height-10);  // Shows the selected file in screen
-    positionX -= fileName.length() * 7;
-    font = createFont("Consolas", 12);
-    textFont(font);
-    text("Loaded files: ", positionX, height-10);
-  }
-  else if (dataFileCount > 1) {
-    String fileName;
-    for (int x = 0 ; x < dataFileCount ; x++) { //<>//
-      fileName = dataFiles[x].getFileName ();
-      if ( x > 0 )
-        fileName += ", ";
-      int colorR, colorG, colorB;
-      colorR = predefinedColorR[ x ];
-      colorG = predefinedColorG[ x ];
-      colorB = predefinedColorB[ x ];
-      fill( colorR, colorG, colorB);
-      text(fileName, positionX, height-10);
-      positionX -= fileName.length() * 7;
-    }
-    fill(0);
-    font = createFont("Consolas", 12);
-    textFont(font);
-    text("Loaded files: ", positionX, height-10);
-  }
-  font = createFont("Consolas", 12);
-  textFont(font);
-  /*
-    // Average and Standard Deviation
-    textAlign(RIGHT);
-    fill(0);
-    text("Mean = " + nf((float)avgMinValue,0,2) , width-80 , plotFromY+60);
-    text("SDeviation = " + nf((float)sDeviation,0,2) , width-80 , plotFromY+80);
-  */
+  text( dataFileCount +" file/s loaded.", width-10 , height-10);
 }
 
 void plot2SetConfig(){    // Histogram
   // Setup for the histogram plot 
   plot2 = new GPlot(this);
   plot2.setPos(plotToX+75, plotFromY);
-  plot2.setDim( (plotToX-plotFromX) * 0.75 , plotToY-plotFromY);
+  plot2.setDim( (plotToX-plotFromX) * 0.85 , plotToY-plotFromY);
   plot2.getTitle().setText("Seeds delta values Gaussian distribution");
   plot2.getTitle().setTextAlignment(LEFT);
   plot2.getTitle().setRelativePos(0);
@@ -218,10 +170,12 @@ void plot2SetConfig(){    // Histogram
   plot2.getYAxis().getAxisLabel().setTextAlignment(RIGHT);
   plot2.getYAxis().getAxisLabel().setRelativePos(1);
   plot2.getYAxis().setLim(new float[] { 0, 1});
-  plot2.getYAxis().setNTicks( 6);
+  plot2.setVerticalAxesNTicks( 6);
   plot2.activateCentering(LEFT, GPlot.CTRLMOD);
   plot2.activatePointLabels( LEFT, GPlot.NONE);
   
+  PFont font = createFont("Consolas", 12);
+  textFont(font);
 }
 
 void plot2Draw() {
@@ -254,7 +208,7 @@ void plot2Draw() {
     dataFiles[x].addHistogramLayers (hClasses, hClassesWidth, hLimitSup, hMaxValue, hMinValue);
   }
   
-  //Set Labels
+  //Set Axis Labels
    GPointsArray points = new GPointsArray(hClasses+1);
   for (int l = 0; l <= hClasses; l++) {
     points.add(l+0.5 , 0, str(hMinValue+l*hClassesWidth) );
@@ -373,4 +327,6 @@ public static void main(String[] args) {
     String[] mainSketch = concat(new String[] { seedAnalizer.class.getCanonicalName() }, args);
     PApplet.main(mainSketch);
     
+  PFont font = createFont("Consolas", 12);
+  textFont(font);
 }
