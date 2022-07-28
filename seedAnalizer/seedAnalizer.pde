@@ -26,6 +26,7 @@ final int dataFilesMax = 6;  // This means 4 as max files to be loaded at the sa
 public int dataFileCount;  // Counts the files alredy loaded
 String[] column_compare = { "#", "timeStamp", "0"}; // format of .csv file to compare and validated added files.
 public int seedCounter = 0;
+public float hMaxProbValue = 0;
 
 // Predefined Plot Colors= {  R,   G,   B,Yell,Cyan,Mage,}
 int[] predefinedColorR = {  255,   0,   0, 255,   0, 255,};
@@ -69,7 +70,9 @@ void setup() {
   noLoop();
   File start1 = new File(sketchPath("")+"/*.csv"); 
   selectInput("Select a .csv file to analize", "loadData", start1);
-
+  
+  PFont font = createFont("Consolas", 12);
+  textFont(font);
 }
 
 void draw() {
@@ -132,7 +135,7 @@ void drawMath() {
     
     // For the next loop
     positionY += heightForm + 20;
-    }
+  }
 }
 
 void showInfoText() {
@@ -154,7 +157,7 @@ void showInfoText() {
   
   // Name of file selected
   textAlign(RIGHT);
-    fill(0);
+  fill(0);
   text( dataFileCount +" file/s loaded.", width-10 , height-10);
 }
 
@@ -174,8 +177,6 @@ void plot2SetConfig(){    // Histogram
   plot2.activateCentering(LEFT, GPlot.CTRLMOD);
   plot2.activatePointLabels( LEFT, GPlot.NONE);
   
-  PFont font = createFont("Consolas", 12);
-  textFont(font);
 }
 
 void plot2Draw() {
@@ -224,6 +225,23 @@ void plot2Draw() {
   for (int x = 0 ; x <= dataFileCount ; x++) {
     dataFiles[x].setHistogramColors ();
   }
+  
+  float max = 0.1;
+  while (hMaxProbValue > max) {
+    max += 0.05;
+  }
+  int divisions = 5;
+  if (max > 0.5)
+    divisions = 10;
+  float[] ticks = new float[divisions+1];
+  ticks[0] = 0;
+  for ( int i = 1; i <= divisions ; i++){
+    float aux = (max / divisions) * i;
+    aux = round( aux * 100);
+    aux /= 100;
+    ticks [i] = aux;
+  }
+  plot2.setVerticalAxesTicks( ticks ); //<>//
   
   // Get an array of all the min values of each valid seed
   
@@ -327,6 +345,4 @@ public static void main(String[] args) {
     String[] mainSketch = concat(new String[] { seedAnalizer.class.getCanonicalName() }, args);
     PApplet.main(mainSketch);
     
-  PFont font = createFont("Consolas", 12);
-  textFont(font);
 }

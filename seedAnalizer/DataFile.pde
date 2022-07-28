@@ -198,6 +198,9 @@ class DataFile {
     int m = 0;
     for (int l = hClassesLocalLimits[0] ; l <= hClassesLocalLimits[1]; l++, m++) {
       points.add( l, gaussianStack[m]/gaussianCounter );
+      if ( hMaxProbValue < (gaussianStack[m]/gaussianCounter) ){
+        hMaxProbValue = (gaussianStack[m]/gaussianCounter);
+      }
     }
     
     String layerName = fileName + "." + str(fileIndex) ;
