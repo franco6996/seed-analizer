@@ -97,25 +97,69 @@ void draw() {
     plot2.drawTitle();
     plot2.drawHistograms();
     plot2.endDraw();
+  
+  // Draw probabilistic info
+  drawMath();
+  
   // Show information text arround the window
   showInfoText();
 }
 
+void drawMath() {
+  textAlign(RIGHT);
+  int positionX = width-30;
+  int positionY = 40;
+  int wideForm = 180;
+  int heightForm = 70;
+  if ( dataFileCount == 1) {
+    noFill();
+    stroke(200);
+    rect(positionX, positionY, -wideForm, heightForm);
+    line(positionX, positionY+20, positionX-wideForm, positionY+20);
+    fill(0);
+    textAlign(CENTER);
+    text(dataFiles[0].getFileName(), positionX - wideForm/2, positionY+15);
+    float avg = dataFiles[0].getAvgDeltaValue();
+    float sDeviation = dataFiles[0].getSDeviation();
+    textAlign(RIGHT);
+    text( "Average Delta: " + nf(avg,0,2),positionX-5, positionY+40);
+    text( "SD: " +nf(sDeviation,0,2), positionX-5, positionY+60);
+    
+  }/*
+  else if (dataFileCount > 1) {
+    String fileName;
+    for (int x = 0 ; x < dataFileCount ; x++) {
+      fileName = dataFiles[x].getFileName ();
+      if ( x > 0 )
+        fileName += ", ";
+      int colorR, colorG, colorB;
+      colorR = predefinedColorR[ x ];
+      colorG = predefinedColorG[ x ];
+      colorB = predefinedColorB[ x ];
+      fill( colorR, colorG, colorB);
+      text(fileName, positionX, height-10);
+      positionX -= fileName.length() * 7;
+    }
+    fill(0);
+    text("Loaded files: ", positionX, height-10);
+  }*/
+}
+
 void showInfoText() {
   
-  // Name and version of SW
+  // Show help
   textAlign(LEFT);
   fill(0);
-  text("Seed Analizer  " + swVersion , 10, height-10);
+  text("Press 'n' to add a new file to compare", 10, height-10);
   
   // Show FPS Counter if i'm in debug
-  textAlign(CENTER);
-  fill(0);
+  textAlign(LEFT);
+  fill(150);
   if ( debug )
-    text("FPS: " + nf(frameRate, 0, 2) , width/2 , height-10);
+    text("FPS: " + nf(frameRate, 0, 2) , 10 , 10);
   
   // Update title seeds number
-  if( (frameCount % 300) == 0 )
+  if( dataFileCount > 0 )
     plot1.setTitleText("Overlaping " + str( seedCounter) + " Seeds");
   
   // Name of file selected
@@ -165,8 +209,8 @@ void showInfoText() {
 void plot2SetConfig(){    // Histogram
   // Setup for the histogram plot 
   plot2 = new GPlot(this);
-  plot2.setPos(plotFromX+plotToX+100, plotFromY);
-  plot2.setDim(plotToX-plotFromX, plotToY-plotFromY);
+  plot2.setPos(plotToX+75, plotFromY);
+  plot2.setDim( (plotToX-plotFromX) * 0.75 , plotToY-plotFromY);
   plot2.getTitle().setText("Seeds delta values Gaussian distribution");
   plot2.getTitle().setTextAlignment(LEFT);
   plot2.getTitle().setRelativePos(0);
@@ -281,6 +325,7 @@ void loadData(File selection) {
   seedCounter = 0;
   for (int x = 0 ; x < dataFileCount ; x++) {
     seedCounter += dataFiles[x].getValidSeeds ();
+    dataFiles[x].calcSDeviation();
   }
   
   loop();

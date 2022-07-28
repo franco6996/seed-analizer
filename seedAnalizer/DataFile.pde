@@ -68,7 +68,7 @@ class DataFile {
   }
   
   // Returns the average of all the delta values in file.
-  double getAvgDeltaValue () {
+  double calcAvgDeltaValue () {
     int delta, counter = 0;
     double avg = 0;
     
@@ -85,6 +85,10 @@ class DataFile {
     return avgDeltaValue;
   }
   
+  float getAvgDeltaValue () {
+   return (float)avgDeltaValue;
+  }
+  
   // Get an array of all the delta values of each valid see
   private ArrayList<Integer> getDeltaValueVector () {
     // Get an array of all the delta values of each valid see
@@ -98,7 +102,7 @@ class DataFile {
   }
   
   // Returns the standard deviation of the  minimun value for each row of table.
-  double getSDeviation () {
+  double calcSDeviation () {
     
     // Get an array of all the delta values of each valid see
     ArrayList<Integer> deltaValueVector = new ArrayList<Integer>();
@@ -106,7 +110,7 @@ class DataFile {
     
     // Get de deviation
     if (avgDeltaValue == 0)
-      getAvgDeltaValue();
+      calcAvgDeltaValue();
     for(int x = 0 ; x < deltaValueVector.size() ; x++) {
       sDeviation += Math.pow( deltaValueVector.get(x) - avgDeltaValue, 2);
     }
@@ -114,6 +118,10 @@ class DataFile {
     sDeviation = Math.sqrt(sDeviation);
     
     return sDeviation;
+  }
+  
+  float getSDeviation () {
+    return (float)sDeviation;
   }
   
   // returns a vector containing = { numberOfDeltaValues , minDeltaValue, maxDeltaValue}
