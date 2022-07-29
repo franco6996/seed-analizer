@@ -27,6 +27,7 @@ public int dataFileCount;  // Counts the files alredy loaded
 String[] column_compare = { "#", "timeStamp", "0"}; // format of .csv file to compare and validated added files.
 public int seedCounter = 0;
 public float hMaxProbValue = 0;
+public boolean hNoData = false;
 
 // Predefined Plot Colors= {  R,   G,   B,Yell,Cyan,Mage,}
 int[] predefinedColorR = {  255,   0,   0, 255,   0, 255,};
@@ -130,8 +131,14 @@ void drawMath() {
     float avg = dataFiles[x].getAvgDeltaValue();
     float sDeviation = dataFiles[x].getSDeviation();
     textAlign(RIGHT);
-    text( "Average Delta: " + nf(avg,0,2),positionX-5, positionY+40);
-    text( "SD: " +nf(sDeviation,0,2), positionX-5, positionY+60);
+    if ( avg == -1)
+      text( "Average Delta: --" ,positionX-5, positionY+40);
+    else
+      text( "Average Delta: " + nf(avg,0,2),positionX-5, positionY+40);
+    if (sDeviation == -1 )
+      text( "SD: --" , positionX-5, positionY+60);
+    else
+      text( "SD: " +nf(sDeviation,0,2), positionX-5, positionY+60);
     
     // For the next loop
     positionY += heightForm + 20;
@@ -155,10 +162,24 @@ void showInfoText() {
   if( dataFileCount > 0 )
     plot1.setTitleText("Overlaping " + str( seedCounter) + " Seeds");
   
-  // Name of file selected
+  // Number of files selected
   textAlign(RIGHT);
   fill(0);
   text( dataFileCount +" file/s loaded.", width-10 , height-10);
+  
+  // No histogram data
+   if ( hNoData ) { 
+    textAlign(CENTER);
+    textSize(16);
+    fill(0);
+    float[] pos = new float[2];
+    pos = plot2.getPos();
+    float[] dim = new float[2];
+    dim = plot2.getDim();
+    float x = pos[0] + (dim[0] / 2), y = pos[1] + (dim[1] / 2);
+    text("Not enough data to plot.", x + 60, y);
+    textSize(12);
+   }
 }
 
 void plot2SetConfig(){    // Histogram
@@ -179,23 +200,25 @@ void plot2SetConfig(){    // Histogram
   
 }
 
-void plot2Draw() {
-  // Remove all layers to redraw all the histograms
-  for (int x = 0 ; x < dataFileCount ; x++) {
-    dataFiles[x].removeHistogramLayers ();
-  }
-  
+void plot2Draw() {  
   // Get info of all the files necesaries to configure the plot histogram
   int[] pointsInfo = new int[3];
   int hMinValue = 0xFFFFFF, hMaxValue = 0, hPoints = 0;
-  for (int x = 0 ; x <= dataFileCount ; x++) {
+  for (int x = 0 ; x < dataFileCount ; x++) {
     pointsInfo = dataFiles[x].getDeltaValuesInfo();  // get { numberOfDeltaValues , minDeltaValue, maxDeltaValue}
     hPoints += pointsInfo[0];
-    if ( pointsInfo[1] < hMinValue)
+    if ( pointsInfo[1] < hMinValue && pointsInfo[0] > 0)
       hMinValue = pointsInfo[1];
-    if ( pointsInfo[2] > hMaxValue)
+    if ( pointsInfo[2] > hMaxValue && pointsInfo[0] > 0)
       hMaxValue = pointsInfo[2];
   }
+  
+  // If too little data
+  if ( hPoints < 3 )  {
+    hNoData = true;
+    return;
+  }
+  hNoData = false;
   
   // Calculate histogram bin count and more
   int hClasses = (int) Math.sqrt( (double)hPoints ); // Define the quantity of classes (divisions/bins of the histogram)
@@ -205,7 +228,7 @@ void plot2Draw() {
   int hLimitSup = hMinValue + hClassesWidth;  //  Calculate the superior limit of the first class
   
   // Add layers of each file
-  for (int x = 0 ; x <= dataFileCount ; x++) {
+  for (int x = 0 ; x < dataFileCount ; x++) {
     dataFiles[x].addHistogramLayers (hClasses, hClassesWidth, hLimitSup, hMaxValue, hMinValue);
   }
   
@@ -222,7 +245,7 @@ void plot2Draw() {
   plot2.getHistogram().setRotateLabels(false);
   
   // Set layers colors
-  for (int x = 0 ; x <= dataFileCount ; x++) {
+  for (int x = 0 ; x < dataFileCount ; x++) {
     dataFiles[x].setHistogramColors ();
   }
   
@@ -241,7 +264,7 @@ void plot2Draw() {
     aux /= 100;
     ticks [i] = aux;
   }
-  plot2.setVerticalAxesTicks( ticks ); //<>//
+  plot2.setVerticalAxesTicks( ticks );
   
   // Get an array of all the min values of each valid seed
   
@@ -289,11 +312,18 @@ void loadData(File selection) {
   }
   dataFiles[dataFileCount].addLayers();
   
-  plot2Draw();
+  // Remove all histogram layers to redraw it
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    dataFiles[x].removeHistogramLayers ();
+  }
+  
   // Prepare for the next file
   dataFileCount++;
   
-  // To update title seeds number
+  // Draw histogram for all files
+  plot2Draw();
+  
+  // To update title seeds number and calculate probabilistic math
   seedCounter = 0;
   for (int x = 0 ; x < dataFileCount ; x++) {
     seedCounter += dataFiles[x].getValidSeeds ();
@@ -334,7 +364,7 @@ void mouseClicked() {
       return;
     if ( layerNames.size() > 3 )
       return;
-    // set de seeds of the layers as invalid
+    // set the seeds of the selected layers as invalid and remove it from the plot
     for ( int x = 0 ; x < layerNames.size() ; x++ ) {
       // Trims the layerName array into the file to access and the item to put as invalid.
       String ln = layerNames.get(x);
@@ -344,8 +374,23 @@ void mouseClicked() {
       int fiN = Integer.valueOf(fi);
       int snN = Integer.valueOf(sn);
       // Set seed as invalid
-      dataFiles[ fiN ].setSeedAsInvalid( snN ); //<>//
+      dataFiles[ fiN ].setSeedAsInvalid( snN );
       plot1.removeLayer(ln);
+    }
+    
+    // Remove all histogram layers to redraw it
+    for (int x = 0 ; x < dataFileCount ; x++) {
+      dataFiles[x].removeHistogramLayers ();
+    }
+    
+    // Draw histogram for all files
+    plot2Draw();
+    
+    // To update title seeds number and calculate probabilistic math
+    seedCounter = 0;
+    for (int x = 0 ; x < dataFileCount ; x++) {
+      seedCounter += dataFiles[x].getValidSeeds ();
+      dataFiles[x].calcSDeviation();
     }
   }
   
