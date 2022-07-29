@@ -41,7 +41,7 @@ final int plotToX = 680;
 final int plotToY = 680;
 
 // Define the version SW
-final String swVersion = "v0.5b";
+final String swVersion = "0.6";
 boolean debug = true;
 
 void settings() {
@@ -60,7 +60,10 @@ void setup() {
   if (titlebaricon != null){
     surface.setIcon(titlebaricon);
   }
-  surface.setTitle("Seed Analizer (" + swVersion + ")" ); 
+  surface.setTitle("Seed Analizer (v" + swVersion + ")" ); 
+  
+  // Check for new Updates
+  checkUpdates();
   
   dataFiles = new DataFile[dataFilesMax];
   dataFileCount = 0;
