@@ -44,6 +44,7 @@ class DataFile {
     
     // The size of the array of Seed objects is determined by the total number of rows in the CSV
     seeds = new Seed[table.getRowCount()]; 
+    
     // You can access iterate over all the rows in a table
     int rowCount = 0;
     for (TableRow row : table.rows()) {
@@ -79,9 +80,12 @@ class DataFile {
         counter++;
       }
     }
-    avg /= counter;
-    avgDeltaValue = avg;
-    
+    if ( counter == 0 )
+      avgDeltaValue = -1;
+    else {
+      avg /= counter;
+      avgDeltaValue = avg;
+    }
     return avgDeltaValue;
   }
   
@@ -89,9 +93,8 @@ class DataFile {
    return (float)avgDeltaValue;
   }
   
-  // Get an array of all the delta values of each valid see
+  // Get an array of all the delta values of each valid seed
   private ArrayList<Integer> getDeltaValueVector () {
-    // Get an array of all the delta values of each valid see
     ArrayList<Integer> deltaVector = new ArrayList<Integer>();
     for (Seed s : seeds) {
       int delta = s.getDeltaV();
@@ -108,9 +111,16 @@ class DataFile {
     ArrayList<Integer> deltaValueVector = new ArrayList<Integer>();
     deltaValueVector = getDeltaValueVector();
     
+    // Need for the avg value for next calcs
+    calcAvgDeltaValue();
+    
+    // Return if i have less of 2 values
+    if ( avgDeltaValue == -1 || deltaValueVector.size() == 1) {
+      sDeviation = -1;
+      return sDeviation;
+    }
+    
     // Get de deviation
-    if (avgDeltaValue == 0)
-      calcAvgDeltaValue();
     for(int x = 0 ; x < deltaValueVector.size() ; x++) {
       sDeviation += Math.pow( deltaValueVector.get(x) - avgDeltaValue, 2);
     }
@@ -133,10 +143,11 @@ class DataFile {
     deltaValueVector = getDeltaValueVector();
     Collections.sort(deltaValueVector);
     
-    rtrn[0] = deltaValueVector.size();
-    rtrn[1] = deltaValueVector.get(0);
-    rtrn[2] = deltaValueVector.get( deltaValueVector.size() - 1 );
-    
+    if ( deltaValueVector.size() > 0) {
+      rtrn[0] = deltaValueVector.size();
+      rtrn[1] = deltaValueVector.get(0);
+      rtrn[2] = deltaValueVector.get( deltaValueVector.size() - 1 );
+    }
     return rtrn;
   }
   
@@ -254,6 +265,29 @@ class DataFile {
       }
     }
     return validSeedsCounter;
+  }
+  
+  ArrayList<String> getNearLayerPointAt(float mouseX_, float mouseY_) {
+    ArrayList<String> layerNames = new ArrayList<String>();
+    for (Seed s : seeds) {
+      String ln = s.getNearPointAt ( fileName,  fileIndex, mouseX_, mouseY_);
+      if (ln != null)
+        layerNames.add(ln);
+    }
+    if ( layerNames.size() > 0)
+      return layerNames;
+    else
+      return null;
+  }
+  
+  void setSeedAsInvalid(int item_) {
+    for (Seed s : seeds) {
+      int i = s.getItem();
+      if ( i == item_ ) {
+        s.setInvalid();
+        return;
+      }
+    }
   }
   
 }

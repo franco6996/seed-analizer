@@ -49,7 +49,7 @@ class Seed {
     plot1.getLayer(layerName).setLineColor(color(colorR, colorG, colorB, colorA));
     plot1.getLayer(layerName).setPointColor(color(colorR, colorG, colorB, colorA));
     plot1.getLayer(layerName).setFontColor(50);
-    plot1.getLayer(layerName).setFontSize(10);
+    plot1.getLayer(layerName).setFontSize(12);
     plot1.getLayer(layerName).setFontName("Consolas");
     plot1.getLayer(layerName).setLabelBgColor(220);
   }
@@ -81,4 +81,24 @@ class Seed {
     return validSeed;
   }
   
+  // 
+  String getNearPointAt ( String fileName_ , int dataFileIndex_, float mouseX_, float mouseY_) {
+    
+    if (validSeed == false)  // if the seed is invalid, no layer exist in the plot of itself.
+      return null;
+    
+    String layerName = fileName_ + "." + str(dataFileIndex_) + ">" + str(item); //Conform the plot layer name as 'csvFileName.#>itemNumber'
+    if ( plot1.getPointAt(mouseX_,mouseY_,layerName ) != null)
+      return layerName;
+    else
+      return null;
+  }
+  
+  void setInvalid () {
+    validSeed = false;
+  }
+  
+  int getItem() {
+    return item;
+  }
 }
