@@ -81,4 +81,24 @@ class Seed {
     return validSeed;
   }
   
+  // 
+  String getNearPointAt ( String fileName_ , int dataFileIndex_, float mouseX_, float mouseY_) {
+    
+    if (validSeed == false)  // if the seed is invalid, no layer exist in the plot of itself.
+      return null;
+    
+    String layerName = fileName_ + "." + str(dataFileIndex_) + ">" + str(item); //Conform the plot layer name as 'csvFileName.#>itemNumber'
+    if ( plot1.getPointAt(mouseX_,mouseY_,layerName ) != null)
+      return layerName;
+    else
+      return null;
+  }
+  
+  void setInvalid () {
+    validSeed = false;
+  }
+  
+  int getItem() {
+    return item;
+  }
 }

@@ -44,8 +44,9 @@ class DataFile {
     
     // The size of the array of Seed objects is determined by the total number of rows in the CSV
     seeds = new Seed[table.getRowCount()]; 
+    
     // You can access iterate over all the rows in a table
-    int rowCount = 0;
+    int rowCount = 0; //<>//
     for (TableRow row : table.rows()) {
       // You can access the fields via their column name (or index)
       int seedNumber = row.getInt("#");               //get the item number
@@ -254,6 +255,29 @@ class DataFile {
       }
     }
     return validSeedsCounter;
+  }
+  
+  ArrayList<String> getNearLayerPointAt(float mouseX_, float mouseY_) {
+    ArrayList<String> layerNames = new ArrayList<String>();
+    for (Seed s : seeds) {
+      String ln = s.getNearPointAt ( fileName,  fileIndex, mouseX_, mouseY_);
+      if (ln != null)
+        layerNames.add(ln);
+    }
+    if ( layerNames.size() > 0)
+      return layerNames;
+    else
+      return null;
+  }
+  
+  void setSeedAsInvalid(int item_) {
+    for (Seed s : seeds) {
+      int i = s.getItem();
+      if ( i == item_ ) {
+        s.setInvalid();
+        return;
+      }
+    }
   }
   
 }

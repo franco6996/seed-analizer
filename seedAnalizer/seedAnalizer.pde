@@ -40,7 +40,7 @@ final int plotToX = 680;
 final int plotToY = 680;
 
 // Define the version SW
-final String swVersion = "v0.4b";
+final String swVersion = "v0.5b";
 boolean debug = true;
 
 void settings() {
@@ -316,27 +316,40 @@ void keyPressed() {
   }
 }
 
-/*
-void mousePressed() {
-  // Create a new row
-  TableRow row = table.addRow();
-  // Set the values of that row
-  row.setFloat("x", mouseX);
-  row.setFloat("y", mouseY);
-  row.setFloat("diameter", random(40, 80));
-  row.setString("name", "Blah");
 
-  // If the table has more than 10 rows
-  if (table.getRowCount() > 10) {
-    // Delete the oldest row
-    table.removeRow(0);
+void mouseClicked() {
+  
+  if ( mouseButton == RIGHT) {
+    // Get an array of the near layers to mouse
+    ArrayList<String> layerNames = new ArrayList<String>();
+    
+    for (int x = 0 ; x < dataFileCount ; x++) {
+      ArrayList<String> lns = dataFiles[x].getNearLayerPointAt ( mouseX, mouseY);
+      if ( lns != null )
+        layerNames.addAll(lns);
+    }
+    
+    // Break if no point or too many are close.
+    if ( layerNames.size() == 0 )
+      return;
+    if ( layerNames.size() > 3 )
+      return;
+    // set de seeds of the layers as invalid
+    for ( int x = 0 ; x < layerNames.size() ; x++ ) {
+      // Trims the layerName array into the file to access and the item to put as invalid.
+      String ln = layerNames.get(x);
+      int indexOf = ln.indexOf(">");
+      String fi = ln.substring( indexOf-1 , indexOf );  // file index 
+      String sn = ln.substring( indexOf + 1 );  // seed item
+      int fiN = Integer.valueOf(fi);
+      int snN = Integer.valueOf(sn);
+      // Set seed as invalid
+      dataFiles[ fiN ].setSeedAsInvalid( snN ); //<>//
+      plot1.removeLayer(ln);
+    }
   }
-
-  // Writing the CSV back to the same file
-  saveTable(table, "data/data.csv");
-  // And reloading it
-  loadData();
-}*/
+  
+}
 
 // This function calls the main sketch code but with a uiScale parameter to work well on scaled displays in exported apps.
 public static void main(String[] args) {
