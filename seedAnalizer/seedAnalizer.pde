@@ -41,12 +41,12 @@ final int plotToX = 680;
 final int plotToY = 680;
 
 // Define the version SW
-final String swVersion = "0.6";
+final String swVersion = "0.7";
 boolean debug = true;
 
 void settings() {
   size(1600, 800);
-  smooth(2);
+  //smooth(4);
 }
 
 void setup() {
@@ -148,12 +148,32 @@ void drawMath() {
   }
 }
 
+int helpNumber = 0;
+int time = 0;
 void showInfoText() {
-  
-  // Show help
+
+  if ( millis() - time > 5000) {
+    helpNumber ++;
+    if ( helpNumber > 3 )
+      helpNumber = 0;
+    time = millis();
+  }
   textAlign(LEFT);
   fill(0);
-  text("Press 'n' to add a new file to compare", 10, height-10);
+  switch ( helpNumber ) {
+    case 1:
+      text("Press 'LEFT MOUSE' to highlight a Point in the plot", 10, height-10);
+    break;
+    case 2:
+      text("Press 'RIGHT MOUSE' to set a Point as invalid", 10, height-10);
+    break;
+    case 3:
+      text("Press 'r' to center the view", 10, height-10);
+    break;
+    default:
+      text("Press 'n' to add a new file to compare", 10, height-10);
+    break;
+  }
   
   // Show FPS Counter if i'm in debug
   textAlign(LEFT);
@@ -336,67 +356,141 @@ void loadData(File selection) {
   loop();
 }
 
-// Pressing 'n' will bring the window to select a new file to add to the plot
-void keyPressed() {
-  if (key == 'n') {
-    if ( dataFileCount >= dataFilesMax ) {
-      javax.swing.JOptionPane.showMessageDialog(null, "Max number of files reached.", "File Input Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-    } else {
-      noLoop();
-      File start1 = new File(sketchPath("")+"/*.csv");
-      selectInput("Select a .csv file to analize", "loadData", start1);
-    }
+void rightMouseFunction() {
+  // Get an array of the near layers to mouse
+  ArrayList<String> layerNames = new ArrayList<String>();
+  
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    ArrayList<String> lns = dataFiles[x].getNearLayerPointAt ( mouseX, mouseY);
+    if ( lns != null )
+      layerNames.addAll(lns);
+  }
+  
+  // Break if no point or too many are close.
+  if ( layerNames.size() == 0 )
+    return;
+  if ( layerNames.size() > 3 )
+    return;
+  // set the seeds of the selected layers as invalid and remove it from the plot
+  for ( int x = 0 ; x < layerNames.size() ; x++ ) {
+    // Trims the layerName array into the file to access and the item to put as invalid.
+    String ln = layerNames.get(x);
+    int indexOf = ln.indexOf(">");
+    String fi = ln.substring( indexOf-1 , indexOf );  // file index 
+    String sn = ln.substring( indexOf + 1 );  // seed item
+    int fiN = Integer.valueOf(fi);
+    int snN = Integer.valueOf(sn);
+    // Set seed as invalid
+    dataFiles[ fiN ].setSeedAsInvalid( snN );
+    plot1.removeLayer(ln);
+    
+    // If the highlighted seed was the wanted to put as invalid
+    if ( ln.equals(lastHighlightedLayer) ) //<>//
+      lastHighlightedLayer = null;
+  }
+  
+  // Remove all histogram layers to redraw it
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    dataFiles[x].removeHistogramLayers ();
+  }
+  
+  // Draw histogram for all files
+  plot2Draw();
+  
+  // To update title seeds number and calculate probabilistic math
+  seedCounter = 0;
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    seedCounter += dataFiles[x].getValidSeeds ();
+    dataFiles[x].calcSDeviation();
   }
 }
 
+String lastHighlightedLayer;
+int[] lastHighlightedColor = new int[4];
+
+void leftMouseFunction() {
+  // Get an array of the near layers to mouse
+  ArrayList<String> layerNames = new ArrayList<String>();
+  
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    ArrayList<String> lns = dataFiles[x].getNearLayerPointAt ( mouseX, mouseY);
+    if ( lns != null )
+      layerNames.addAll(lns);
+  }
+  
+  // Break if no point or too many are close.
+  if ( layerNames.size() == 0 )
+    return;
+  if ( layerNames.size() > 1 )
+    return;
+    
+  if ( lastHighlightedLayer != null) {
+    plot1.getLayer(lastHighlightedLayer).setLineColor(lastHighlightedColor[0]);
+    plot1.getLayer(lastHighlightedLayer).setPointColor(lastHighlightedColor[0]);
+  }
+    
+  // set the seeds of the selected layers as invalid and remove it from the plot
+  for ( int x = 0 ; x < layerNames.size() ; x++ ) {
+    // Trims the layerName array into the file to access and the item to put as invalid.
+    String ln = layerNames.get(x);
+    
+    int nPoints = plot1.getLayer(ln).getPoints().getNPoints();
+    GPointsArray points = new GPointsArray(nPoints);  // points of layer
+    points = plot1.getLayer(ln).getPoints();
+    lastHighlightedColor = plot1.getLayer(ln).getPointColors();
+    
+    plot1.removeLayer(ln);
+    
+    plot1.addLayer(ln, points);
+    plot1.getLayer(ln).setLineColor(color(0, 0, 0, 255));
+    plot1.getLayer(ln).setPointColor(color(0, 0, 0, 255));
+    
+    lastHighlightedLayer = ln;
+  }
+}
+
+void resetView() {
+    
+    if ( lastHighlightedLayer != null ) {
+      plot1.getLayer(lastHighlightedLayer).setLineColor(lastHighlightedColor[0]);
+      plot1.getLayer(lastHighlightedLayer).setPointColor(lastHighlightedColor[0]);
+    }
+    
+    lastHighlightedLayer = null;
+    
+    float[] center = new float[2];
+    center = plot1.getScreenPosAtValue(50, 2000);
+    plot1.center (center[0],center[1]);
+}
 
 void mouseClicked() {
   
   if ( mouseButton == RIGHT) {
-    // Get an array of the near layers to mouse
-    ArrayList<String> layerNames = new ArrayList<String>();
-    
-    for (int x = 0 ; x < dataFileCount ; x++) {
-      ArrayList<String> lns = dataFiles[x].getNearLayerPointAt ( mouseX, mouseY);
-      if ( lns != null )
-        layerNames.addAll(lns);
-    }
-    
-    // Break if no point or too many are close.
-    if ( layerNames.size() == 0 )
-      return;
-    if ( layerNames.size() > 3 )
-      return;
-    // set the seeds of the selected layers as invalid and remove it from the plot
-    for ( int x = 0 ; x < layerNames.size() ; x++ ) {
-      // Trims the layerName array into the file to access and the item to put as invalid.
-      String ln = layerNames.get(x);
-      int indexOf = ln.indexOf(">");
-      String fi = ln.substring( indexOf-1 , indexOf );  // file index 
-      String sn = ln.substring( indexOf + 1 );  // seed item
-      int fiN = Integer.valueOf(fi);
-      int snN = Integer.valueOf(sn);
-      // Set seed as invalid
-      dataFiles[ fiN ].setSeedAsInvalid( snN );
-      plot1.removeLayer(ln);
-    }
-    
-    // Remove all histogram layers to redraw it
-    for (int x = 0 ; x < dataFileCount ; x++) {
-      dataFiles[x].removeHistogramLayers ();
-    }
-    
-    // Draw histogram for all files
-    plot2Draw();
-    
-    // To update title seeds number and calculate probabilistic math
-    seedCounter = 0;
-    for (int x = 0 ; x < dataFileCount ; x++) {
-      seedCounter += dataFiles[x].getValidSeeds ();
-      dataFiles[x].calcSDeviation();
-    }
+    rightMouseFunction();
   }
   
+  if ( mouseButton == LEFT) {
+    leftMouseFunction();
+  }
+  
+}
+
+// Pressing 'n' will bring the window to select a new file to add to the plot
+void keyPressed() {
+  switch (key) {
+    case 'n':
+      if ( dataFileCount >= dataFilesMax ) {
+        javax.swing.JOptionPane.showMessageDialog(null, "Max number of files reached.", "File Input Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+      } else {
+        noLoop();
+        File start1 = new File(sketchPath("")+"/*.csv");
+        selectInput("Select a .csv file to analize", "loadData", start1);
+      }
+    break;
+    case 'r':
+      resetView();
+    break;
+  }
 }
 
 // This function calls the main sketch code but with a uiScale parameter to work well on scaled displays in exported apps.
