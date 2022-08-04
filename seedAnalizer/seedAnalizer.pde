@@ -1,5 +1,3 @@
-import processing.javafx.*; //<>//
-
 /**
  * Loading Tabular Data
  *
@@ -13,6 +11,7 @@ import processing.javafx.*; //<>//
  */
 
 // Libraries
+import processing.javafx.*;
 import grafica.*;
 //import java.util.Random;
 //import java.util.ArrayList;
@@ -43,7 +42,7 @@ final int plotToX = 680;
 final int plotToY = 680;
 
 // Define the version SW
-final String swVersion = "0.7";
+final String swVersion = "0.8";
 boolean debug = true;
 
 void settings() {
