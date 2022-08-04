@@ -129,9 +129,19 @@ void drawMath() {
     line(positionX, positionY+20, positionX-wideForm, positionY+20);
     fill(0);
     textAlign(CENTER);
+    // Getting the corresponding color
     if ( dataFileCount > 1 )
       fill( predefinedColorR[ x ], predefinedColorG[ x ], predefinedColorB[ x ]);
-    text(dataFiles[x].getFileName(), positionX - wideForm/2, positionY+15);
+    // Get Name of file
+    String fn = dataFiles[x].getFileName();
+    // Cut name if too long and take away the '.csv'
+    fn = fn.substring(0,fn.length()-4 );
+    if ( fn.length() > 21){
+      fn = fn.substring(0,19);
+      fn += "...";      
+    }
+    text( fn, positionX - wideForm/2, positionY+15);
+    // Write the math
     fill(0);
     float avg = dataFiles[x].getAvgDeltaValue();
     float sDeviation = dataFiles[x].getSDeviation();
@@ -387,7 +397,7 @@ void rightMouseFunction() {
     plot1.removeLayer(ln);
     
     // If the highlighted seed was the wanted to put as invalid
-    if ( ln.equals(lastHighlightedLayer) ) //<>//
+    if ( ln.equals(lastHighlightedLayer) )
       lastHighlightedLayer = null;
   }
   
