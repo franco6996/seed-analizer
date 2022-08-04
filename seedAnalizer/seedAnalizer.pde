@@ -47,7 +47,6 @@ final String swVersion = "0.7";
 boolean debug = true;
 
 void settings() {
-  size(1600, 800);
   size(1600, 800, PConstants.FX2D );
   //smooth(4);
 }
@@ -479,11 +478,9 @@ void mouseClicked() {
 }
 
 // Pressing 'n' will bring the window to select a new file to add to the plot
-void keyPressed() {
 void keyReleased() {
   println(key);
   switch (key) {
-    case 'n':
     case 'N':
       if ( dataFileCount >= dataFilesMax ) {
         javax.swing.JOptionPane.showMessageDialog(null, "Max number of files reached.", "File Input Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
@@ -493,7 +490,6 @@ void keyReleased() {
         selectInput("Select a .csv file to analize", "loadData", start1);
       }
     break;
-    case 'r':
     case 'R':
       resetView();
     break;
