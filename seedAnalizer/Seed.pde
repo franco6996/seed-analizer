@@ -64,6 +64,11 @@ class Seed {
     plot1.removeLayer( layerName );
   }
   
+  // Adds the values of the seeds to a main layer
+  void addPointsToMainLayer() {
+    
+  }
+  
   // Returns the delta adc value between the first value of vector and the min
   int getDeltaV() {
     if (validSeed == false)

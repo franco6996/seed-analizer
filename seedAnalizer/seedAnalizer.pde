@@ -19,7 +19,7 @@ import java.util.*;
 import java.lang.Math;
 
 // Grafica objects
-GPlot plot1, plot2;
+GPlot plot1, plot2, plot3;
 
 // An Array of dataFiles (.csv) to be loaded with seeds data each one
 DataFile[] dataFiles;
@@ -71,6 +71,7 @@ void setup() {
   
   plot1SetConfig();
   plot2SetConfig();
+  plot3SetConfig();
   
   noLoop();
   File start1 = new File(sketchPath("")+"/*.csv"); 
@@ -80,35 +81,52 @@ void setup() {
   textFont(font);
 }
 
+public int plotMode = 0;
 void draw() {
   background(255);  // clear the previus draw
   
-  // Draw the Plot
-    //plot1.defaultDraw();
-    plot1.beginDraw();
-    plot1.drawBackground();
-    plot1.drawBox();
-    plot1.drawYAxis();
-    plot1.drawXAxis();
-    plot1.drawTitle();
-    plot1.drawPoints();
-    plot1.drawLines();
-    plot1.drawLabels();
-    plot1.endDraw();
+  // Draw the Plots
+  switch (plotMode) {
     
-    plot2.beginDraw();
-    plot2.drawBackground();
-    plot2.drawBox();
-    plot2.drawYAxis();
-    plot2.drawGridLines(GPlot.HORIZONTAL);
-    plot2.setGridLineWidth(0.5);
-    plot2.drawTitle();
-    plot2.drawHistograms();
-    plot2.endDraw();
-  
-  // Draw probabilistic info
-  drawMath();
-  
+    case 1:   // Timeline view
+      plot3.beginDraw();
+      plot3.drawBackground();
+      plot3.drawBox();
+      plot3.drawYAxis();
+      plot3.drawXAxis();
+      plot3.drawTitle();
+      plot3.drawPoints();
+      plot3.drawLines();
+      plot3.drawLabels();
+      plot3.endDraw();
+    break;
+    
+    default:  // Default view
+      //plot1.defaultDraw();
+      plot1.beginDraw();
+      plot1.drawBackground();
+      plot1.drawBox();
+      plot1.drawYAxis();
+      plot1.drawXAxis();
+      plot1.drawTitle();
+      plot1.drawPoints();
+      plot1.drawLines();
+      plot1.drawLabels();
+      plot1.endDraw();
+      // Histogram plot
+      plot2.beginDraw();
+      plot2.drawBackground();
+      plot2.drawBox();
+      plot2.drawYAxis();
+      plot2.drawGridLines(GPlot.HORIZONTAL);
+      plot2.setGridLineWidth(0.5);
+      plot2.drawTitle();
+      plot2.drawHistograms();
+      plot2.endDraw();
+      // Draw probabilistic info to the right
+      drawMath();
+    break;
+  }
   // Show information text arround the window
   showInfoText();
 }
@@ -340,6 +358,31 @@ void plot1SetConfig() {
   plot1.activatePanning();
 }
 
+void plot3SetConfig() {
+  // Create a new plot and set its position on the screen
+  plot3 = new GPlot(this);
+  plot3.setPos(plotFromX, plotFromY);
+  plot3.setDim( plotToX*2-plotFromX+100, plotToY-plotFromY);
+  
+  // Set the plot title and the axis labels
+  plot3.setTitleText("Seeds Timeline Representation");
+  plot3.getXAxis().setAxisLabelText("Time [ms * 10]");
+  plot3.getYAxis().setAxisLabelText("ADC raw value");
+  
+  plot3.getYAxis().setLim(new float[] { 0, 4100});
+  plot3.getYAxis().setNTicks( 10);
+  plot3.getXAxis().setNTicks( 10);
+  
+  // Set plot1 configs
+  plot3.activatePointLabels();
+  plot3.activateZooming(1.2, CENTER, CENTER);
+  plot3.activatePanning();
+}
+
+void plot3Draw() {
+
+}
+
 void loadData(File selection) {
   if (selection == null) {
     javax.swing.JOptionPane.showMessageDialog(null, "No file selected.", "File Input Error", javax.swing.JOptionPane.WARNING_MESSAGE);
@@ -518,6 +561,16 @@ void keyReleased() {
     break;
     case 'R':
       resetView();
+    break;
+    case 'T':
+      if (plotMode == 0) {
+        plot3Draw();
+        plotMode = 1;
+        println(plotMode);
+      }
+      else {
+        plotMode = 0;
+      }
     break;
   }
 }
