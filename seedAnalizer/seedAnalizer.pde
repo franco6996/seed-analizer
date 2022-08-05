@@ -216,6 +216,17 @@ void showInfoText() {
    }
 }
 
+void loadingText() {
+  fill(0);
+  rect(width/2-100, height/2-40, 195, 60);
+  
+  textAlign(CENTER);
+  fill(255);
+  textSize(32);
+  text("Loading...", width/2 , height/2);
+  textSize(12);
+}
+
 void plot2SetConfig(){    // Histogram
   // Setup for the histogram plot 
   plot2 = new GPlot(this);
@@ -335,7 +346,7 @@ void loadData(File selection) {
     return;
   }
   String fileName = selection.getName(), fileNamePath = selection.getAbsolutePath();
-  
+  loadingText();
   // Initialize the new file
   dataFiles[dataFileCount] = new DataFile( fileName, fileNamePath );
   
@@ -507,7 +518,7 @@ void keyReleased() {
 
 // This function calls the main sketch code but with a uiScale parameter to work well on scaled displays in exported apps.
 public static void main(String[] args) {
-
+  
     System.setProperty("sun.java2d.uiScale", "1.0");
     System.setProperty("prism.allowhidpi","false");
     String[] mainSketch = concat(new String[] { seedAnalizer.class.getCanonicalName() }, args);
