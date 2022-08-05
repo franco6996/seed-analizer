@@ -474,6 +474,7 @@ void resetView() {
     plot1.center (center[0],center[1]);
 }
 
+
 void mouseClicked() {
   
   if ( mouseButton == RIGHT) {
@@ -488,7 +489,6 @@ void mouseClicked() {
 
 // Pressing 'n' will bring the window to select a new file to add to the plot
 void keyReleased() {
-  println(key);
   switch (key) {
     case 'N':
       if ( dataFileCount >= dataFilesMax ) {
@@ -509,6 +509,7 @@ void keyReleased() {
 public static void main(String[] args) {
 
     System.setProperty("sun.java2d.uiScale", "1.0");
+    System.setProperty("prism.allowhidpi","false");
     String[] mainSketch = concat(new String[] { seedAnalizer.class.getCanonicalName() }, args);
     PApplet.main(mainSketch);
     
