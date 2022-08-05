@@ -449,6 +449,8 @@ void leftMouseFunction() {
   if ( lastHighlightedLayer != null) {
     plot1.getLayer(lastHighlightedLayer).setLineColor(lastHighlightedColor[0]);
     plot1.getLayer(lastHighlightedLayer).setPointColor(lastHighlightedColor[0]);
+    plot1.getLayer(lastHighlightedLayer).setLineWidth(1.0);
+    plot1.getLayer(lastHighlightedLayer).setPointSize(7.0);
   }
     
   // set the seeds of the selected layers as invalid and remove it from the plot
@@ -466,6 +468,8 @@ void leftMouseFunction() {
     plot1.addLayer(ln, points);
     plot1.getLayer(ln).setLineColor(color(0, 0, 0, 255));
     plot1.getLayer(ln).setPointColor(color(0, 0, 0, 255));
+    plot1.getLayer(ln).setLineWidth(2.0);
+    plot1.getLayer(ln).setPointSize(8.0);
     
     lastHighlightedLayer = ln;
   }
@@ -476,6 +480,8 @@ void resetView() {
     if ( lastHighlightedLayer != null ) {
       plot1.getLayer(lastHighlightedLayer).setLineColor(lastHighlightedColor[0]);
       plot1.getLayer(lastHighlightedLayer).setPointColor(lastHighlightedColor[0]);
+      plot1.getLayer(lastHighlightedLayer).setLineWidth(1.0);
+      plot1.getLayer(lastHighlightedLayer).setPointSize(7.0);
     }
     
     lastHighlightedLayer = null;
