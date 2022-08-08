@@ -182,25 +182,43 @@ void showInfoText() {
 
   if ( millis() - time > 5000) {
     helpNumber ++;
-    if ( helpNumber > 3 )
+    if ( helpNumber > 4 )
       helpNumber = 0;
     time = millis();
   }
   textAlign(LEFT);
   fill(0);
-  switch ( helpNumber ) {
-    case 1:
-      text("Press 'LEFT MOUSE' to highlight a Point in the plot", 10, height-10);
-    break;
-    case 2:
-      text("Press 'RIGHT MOUSE' to set a Point as invalid", 10, height-10);
-    break;
-    case 3:
-      text("Press 'r' to center the view", 10, height-10);
-    break;
-    default:
-      text("Press 'n' to add a new file to compare", 10, height-10);
-    break;
+  if ( plotMode == 0) {
+    switch ( helpNumber ) {
+      case 0:
+        text("Press 'n' to add a new file to compare", 10, height-10);
+      break;
+      case 1:
+        text("Press 'LEFT MOUSE' to highlight a Point in the plot", 10, height-10);
+      break;
+      case 2:
+        text("Press 'RIGHT MOUSE' to set a Point as invalid", 10, height-10);
+      break;
+      case 3:
+        text("Press 'r' to center the view", 10, height-10);
+      break;
+      default:
+        text("Press 't' to make a timeline", 10, height-10);
+      break;
+    }
+  }
+  else if ( plotMode == 1) {
+    switch ( helpNumber ) {
+      case 0:
+        text("Press '↑' to expand the Y axis", 10, height-10);
+      break;
+      case 1:
+        text("Press '↓' to shrink the Y axis", 10, height-10);
+      break;
+      default:
+        text("Press 't' to return to main view", 10, height-10);
+      break;
+    }
   }
   
   // Show FPS Counter if i'm in debug
@@ -468,7 +486,7 @@ void rightMouseFunction() {
   for (int x = 0 ; x < dataFileCount ; x++) {
     dataFiles[x].removeHistogramLayers ();
   }
-  
+  plot1.setXLim( 0 , 100);
   // Draw histogram for all files
   plot2Draw();
   
@@ -542,6 +560,7 @@ void resetView() {
     float[] center = new float[2];
     center = plot1.getScreenPosAtValue(50, 2000);
     plot1.center (center[0],center[1]);
+    plot1.setXLim( 0 , 100);
 }
 
 
