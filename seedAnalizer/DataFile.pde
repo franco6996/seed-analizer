@@ -290,4 +290,25 @@ class DataFile {
     }
   }
   
+  void addFileToTimeline() {
+    int zeroTime = seeds[0].getTimeStamp();
+    String ln = fileName + "." + fileIndex;
+    
+    GPointsArray points = new GPointsArray(0);
+    plot3.addLayer(ln, points);
+    
+    for (Seed s : seeds) {
+      s.addPointsToLayer( ln, zeroTime);
+    }
+    
+    int colorR = predefinedColorR[ fileIndex ];
+    int colorG = predefinedColorG[ fileIndex ];
+    int colorB = predefinedColorB[ fileIndex ];
+    int colorA = 220;
+    plot3.getLayer(ln).setLineColor(color(colorR, colorG, colorB, colorA));
+    plot3.getLayer(ln).setPointColor(color(colorR, colorG, colorB, colorA));
+    
+    
+  }
+  
 }

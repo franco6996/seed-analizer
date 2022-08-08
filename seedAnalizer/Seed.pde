@@ -64,6 +64,24 @@ class Seed {
     plot1.removeLayer( layerName );
   }
   
+  // Adds the values of the seed to the passed layer
+  void addPointsToLayer(String layerName_, int zeroTime_) {
+    if (validSeed == false) return; // if the seed is invalid, it will not be ploted.
+      
+    int nPoints = value.length;                       // number of value points in cvs file
+    GPointsArray points = new GPointsArray(nPoints);  // points of plot
+    int timeWhereToPlot = timeStamp - zeroTime_;
+    for (int i = 0; i < nPoints; i++) {
+      int xPos = i + timeWhereToPlot - int(value.length / 2);
+      points.add( xPos, value[i], "("+ xPos +","+ value[i] +") #"+item);
+    }
+    plot3.addPoints( points, layerName_);     // add points to the desired layer
+  }
+  
+  int getTimeStamp() {
+    return timeStamp;
+  }
+  
   // Returns the delta adc value between the first value of vector and the min
   int getDeltaV() {
     if (validSeed == false)

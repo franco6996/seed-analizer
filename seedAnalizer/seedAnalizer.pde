@@ -11,6 +11,7 @@
  */
 
 // Libraries
+import processing.javafx.*;
 import grafica.*;
 //import java.util.Random;
 //import java.util.ArrayList;
@@ -18,7 +19,7 @@ import java.util.*;
 import java.lang.Math;
 
 // Grafica objects
-GPlot plot1, plot2;
+GPlot plot1, plot2, plot3;
 
 // An Array of dataFiles (.csv) to be loaded with seeds data each one
 DataFile[] dataFiles;
@@ -41,11 +42,11 @@ final int plotToX = 680;
 final int plotToY = 680;
 
 // Define the version SW
-final String swVersion = "0.7";
+final String swVersion = "0.8";
 boolean debug = true;
 
 void settings() {
-  size(1600, 800);
+  size(1600, 800, PConstants.FX2D );
   //smooth(4);
 }
 
@@ -79,35 +80,52 @@ void setup() {
   textFont(font);
 }
 
+public int plotMode = 0;
 void draw() {
   background(255);  // clear the previus draw
   
-  // Draw the Plot
-    //plot1.defaultDraw();
-    plot1.beginDraw();
-    plot1.drawBackground();
-    plot1.drawBox();
-    plot1.drawYAxis();
-    plot1.drawXAxis();
-    plot1.drawTitle();
-    plot1.drawPoints();
-    plot1.drawLines();
-    plot1.drawLabels();
-    plot1.endDraw();
+  // Draw the Plots
+  switch (plotMode) {
     
-    plot2.beginDraw();
-    plot2.drawBackground();
-    plot2.drawBox();
-    plot2.drawYAxis();
-    plot2.drawGridLines(GPlot.HORIZONTAL);
-    plot2.setGridLineWidth(0.5);
-    plot2.drawTitle();
-    plot2.drawHistograms();
-    plot2.endDraw();
-  
-  // Draw probabilistic info
-  drawMath();
-  
+    case 1:   // Timeline view
+      plot3.beginDraw();
+      plot3.drawBackground();
+      plot3.drawBox();
+      plot3.drawYAxis();
+      plot3.drawXAxis();
+      plot3.drawTitle();
+      plot3.drawPoints();
+      plot3.drawLines();
+      plot3.drawLabels();
+      plot3.endDraw();
+    break;
+    
+    default:  // Default view
+      //plot1.defaultDraw();
+      plot1.beginDraw();
+      plot1.drawBackground();
+      plot1.drawBox();
+      plot1.drawYAxis();
+      plot1.drawXAxis();
+      plot1.drawTitle();
+      plot1.drawPoints();
+      plot1.drawLines();
+      plot1.drawLabels();
+      plot1.endDraw();
+      // Histogram plot
+      plot2.beginDraw();
+      plot2.drawBackground();
+      plot2.drawBox();
+      plot2.drawYAxis();
+      plot2.drawGridLines(GPlot.HORIZONTAL);
+      plot2.setGridLineWidth(0.5);
+      plot2.drawTitle();
+      plot2.drawHistograms();
+      plot2.endDraw();
+      // Draw probabilistic info to the right
+      drawMath();
+    break;
+  }
   // Show information text arround the window
   showInfoText();
 }
@@ -127,9 +145,19 @@ void drawMath() {
     line(positionX, positionY+20, positionX-wideForm, positionY+20);
     fill(0);
     textAlign(CENTER);
+    // Getting the corresponding color
     if ( dataFileCount > 1 )
       fill( predefinedColorR[ x ], predefinedColorG[ x ], predefinedColorB[ x ]);
-    text(dataFiles[x].getFileName(), positionX - wideForm/2, positionY+15);
+    // Get Name of file
+    String fn = dataFiles[x].getFileName();
+    // Cut name if too long and take away the '.csv'
+    fn = fn.substring(0,fn.length()-4 );
+    if ( fn.length() > 21){
+      fn = fn.substring(0,19);
+      fn += "...";      
+    }
+    text( fn, positionX - wideForm/2, positionY+15);
+    // Write the math
     fill(0);
     float avg = dataFiles[x].getAvgDeltaValue();
     float sDeviation = dataFiles[x].getSDeviation();
@@ -154,25 +182,43 @@ void showInfoText() {
 
   if ( millis() - time > 5000) {
     helpNumber ++;
-    if ( helpNumber > 3 )
+    if ( helpNumber > 4 )
       helpNumber = 0;
     time = millis();
   }
   textAlign(LEFT);
   fill(0);
-  switch ( helpNumber ) {
-    case 1:
-      text("Press 'LEFT MOUSE' to highlight a Point in the plot", 10, height-10);
-    break;
-    case 2:
-      text("Press 'RIGHT MOUSE' to set a Point as invalid", 10, height-10);
-    break;
-    case 3:
-      text("Press 'r' to center the view", 10, height-10);
-    break;
-    default:
-      text("Press 'n' to add a new file to compare", 10, height-10);
-    break;
+  if ( plotMode == 0) {
+    switch ( helpNumber ) {
+      case 0:
+        text("Press 'n' to add a new file to compare", 10, height-10);
+      break;
+      case 1:
+        text("Press 'LEFT MOUSE' to highlight a Point in the plot", 10, height-10);
+      break;
+      case 2:
+        text("Press 'RIGHT MOUSE' to set a Point as invalid", 10, height-10);
+      break;
+      case 3:
+        text("Press 'r' to center the view", 10, height-10);
+      break;
+      default:
+        text("Press 't' to make a timeline", 10, height-10);
+      break;
+    }
+  }
+  else if ( plotMode == 1) {
+    switch ( helpNumber ) {
+      case 0:
+        text("Press '↑' to expand the Y axis", 10, height-10);
+      break;
+      case 1:
+        text("Press '↓' to shrink the Y axis", 10, height-10);
+      break;
+      default:
+        text("Press 't' to return to main view", 10, height-10);
+      break;
+    }
   }
   
   // Show FPS Counter if i'm in debug
@@ -203,6 +249,17 @@ void showInfoText() {
     text("Not enough data to plot.", x + 60, y);
     textSize(12);
    }
+}
+
+void loadingText() {
+  fill(0);
+  rect(width/2-100, height/2-40, 195, 60);
+  
+  textAlign(CENTER);
+  fill(255);
+  textSize(32);
+  text("Loading...", width/2 , height/2);
+  textSize(12);
 }
 
 void plot2SetConfig(){    // Histogram
@@ -318,13 +375,49 @@ void plot1SetConfig() {
   plot1.activatePanning();
 }
 
+void plot3SetConfig() {
+  // Create a new plot and set its position on the screen
+  plot3 = new GPlot(this);
+  plot3.setPos(plotFromX, plotFromY);
+  plot3.setDim( plotToX*2-plotFromX+100, plotToY-plotFromY);
+  
+  // Set the plot title and the axis labels
+  plot3.setTitleText("Seeds Timeline Representation");
+  plot3.getXAxis().setAxisLabelText("Time [ms * 10]");
+  plot3.getYAxis().setAxisLabelText("ADC raw value");
+  
+  plot3.getYAxis().setLim(new float[] { 0, 4100});
+  plot3.getYAxis().setNTicks( 10);
+  plot3.getXAxis().setLim(new float[] { 0, 100});
+  plot3.setFixedXLim(true);
+  plot3.getXAxis().setNTicks( 10);
+  
+  // Set plot1 configs
+  plot3.activatePointLabels();
+  plot3.activateZooming(1.2, CENTER, CENTER);
+  plot3.activatePanning();
+}
+
+void plot3Draw() {
+  // Create the plot
+  plot3SetConfig();
+  
+  // Adds all files to the timeline
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    dataFiles[x].addFileToTimeline();
+  }
+  plot3.setXLim( -50 , 200);
+  
+  loop();
+}
+
 void loadData(File selection) {
   if (selection == null) {
     javax.swing.JOptionPane.showMessageDialog(null, "No file selected.", "File Input Error", javax.swing.JOptionPane.WARNING_MESSAGE);
     return;
   }
   String fileName = selection.getName(), fileNamePath = selection.getAbsolutePath();
-  
+  loadingText();
   // Initialize the new file
   dataFiles[dataFileCount] = new DataFile( fileName, fileNamePath );
   
@@ -385,7 +478,7 @@ void rightMouseFunction() {
     plot1.removeLayer(ln);
     
     // If the highlighted seed was the wanted to put as invalid
-    if ( ln.equals(lastHighlightedLayer) ) //<>//
+    if ( ln.equals(lastHighlightedLayer) )
       lastHighlightedLayer = null;
   }
   
@@ -393,7 +486,7 @@ void rightMouseFunction() {
   for (int x = 0 ; x < dataFileCount ; x++) {
     dataFiles[x].removeHistogramLayers ();
   }
-  
+  plot1.setXLim( 0 , 100);
   // Draw histogram for all files
   plot2Draw();
   
@@ -427,6 +520,8 @@ void leftMouseFunction() {
   if ( lastHighlightedLayer != null) {
     plot1.getLayer(lastHighlightedLayer).setLineColor(lastHighlightedColor[0]);
     plot1.getLayer(lastHighlightedLayer).setPointColor(lastHighlightedColor[0]);
+    plot1.getLayer(lastHighlightedLayer).setLineWidth(1.0);
+    plot1.getLayer(lastHighlightedLayer).setPointSize(7.0);
   }
     
   // set the seeds of the selected layers as invalid and remove it from the plot
@@ -444,6 +539,8 @@ void leftMouseFunction() {
     plot1.addLayer(ln, points);
     plot1.getLayer(ln).setLineColor(color(0, 0, 0, 255));
     plot1.getLayer(ln).setPointColor(color(0, 0, 0, 255));
+    plot1.getLayer(ln).setLineWidth(2.0);
+    plot1.getLayer(ln).setPointSize(8.0);
     
     lastHighlightedLayer = ln;
   }
@@ -454,6 +551,8 @@ void resetView() {
     if ( lastHighlightedLayer != null ) {
       plot1.getLayer(lastHighlightedLayer).setLineColor(lastHighlightedColor[0]);
       plot1.getLayer(lastHighlightedLayer).setPointColor(lastHighlightedColor[0]);
+      plot1.getLayer(lastHighlightedLayer).setLineWidth(1.0);
+      plot1.getLayer(lastHighlightedLayer).setPointSize(7.0);
     }
     
     lastHighlightedLayer = null;
@@ -461,9 +560,12 @@ void resetView() {
     float[] center = new float[2];
     center = plot1.getScreenPosAtValue(50, 2000);
     plot1.center (center[0],center[1]);
+    plot1.setXLim( 0 , 100);
 }
 
+
 void mouseClicked() {
+  if (plotMode != 0) return;
   
   if ( mouseButton == RIGHT) {
     rightMouseFunction();
@@ -476,9 +578,10 @@ void mouseClicked() {
 }
 
 // Pressing 'n' will bring the window to select a new file to add to the plot
-void keyPressed() {
+void keyReleased() {
   switch (key) {
-    case 'n':
+    case 'N':
+      if (plotMode != 0) return;
       if ( dataFileCount >= dataFilesMax ) {
         javax.swing.JOptionPane.showMessageDialog(null, "Max number of files reached.", "File Input Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
       } else {
@@ -487,16 +590,60 @@ void keyPressed() {
         selectInput("Select a .csv file to analize", "loadData", start1);
       }
     break;
-    case 'r':
+    case 'R':
+      if (plotMode != 0) return;
       resetView();
+    break;
+    case 'T':
+      if (plotMode == 0) { //<>//
+        noLoop();
+        loadingText();
+        plot1.deactivateZooming(); // the movement in plot3 affects the others
+        plot1.deactivatePanning();
+        
+        // Configure and add all layers and points
+        thread("plot3Draw");
+        // Pass the mode so draw it in screen
+        plotMode = 1;
+      }
+      else {
+        plotMode = 0;
+        plot3 = null;
+        plot1.activateZooming(1.2, CENTER, CENTER);
+        plot1.activatePanning();
+      }
+    break;
+  }
+}
+
+void keyPressed() {
+  switch (key) {
+    case CODED:
+      if (plotMode != 1) return;
+      float[] yLim = plot3.getYLim();
+      switch (keyCode) {
+        case UP:
+          if ( yLim[0] < 100 ) yLim[0]=50;
+          if ( yLim[1] > 4000) yLim[1]=4050;
+          plot3.setYLim ( yLim[0]-50 , yLim[1]+50);
+        break;
+        case DOWN:
+          if ( yLim[1] - yLim[0] < 200 ) {
+            yLim[0] -= 50;
+            yLim[1] += 50;
+          }
+          plot3.setYLim ( yLim[0]+50 , yLim[1]-50);
+        break;
+      }
     break;
   }
 }
 
 // This function calls the main sketch code but with a uiScale parameter to work well on scaled displays in exported apps.
 public static void main(String[] args) {
-
+  
     System.setProperty("sun.java2d.uiScale", "1.0");
+    System.setProperty("prism.allowhidpi","false");
     String[] mainSketch = concat(new String[] { seedAnalizer.class.getCanonicalName() }, args);
     PApplet.main(mainSketch);
     
