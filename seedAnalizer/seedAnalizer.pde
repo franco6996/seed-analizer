@@ -381,8 +381,6 @@ void plot3SetConfig() {
 }
 
 void plot3Draw() {
-  
-  loadingText();
   // Create the plot
   plot3SetConfig();
   
@@ -391,6 +389,8 @@ void plot3Draw() {
     dataFiles[x].addFileToTimeline();
   }
   plot3.setXLim( -50 , 200);
+  
+  loop();
 }
 
 void loadData(File selection) {
@@ -578,14 +578,14 @@ void keyReleased() {
     case 'T':
       if (plotMode == 0) { //<>//
         noLoop();
+        loadingText();
         plot1.deactivateZooming(); // the movement in plot3 affects the others
         plot1.deactivatePanning();
         
         // Configure and add all layers and points
-        plot3Draw();
+        thread("plot3Draw");
         // Pass the mode so draw it in screen
         plotMode = 1;
-        loop();
       }
       else {
         plotMode = 0;
