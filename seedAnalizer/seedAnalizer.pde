@@ -71,7 +71,6 @@ void setup() {
   
   plot1SetConfig();
   plot2SetConfig();
-  plot3SetConfig();
   
   noLoop();
   File start1 = new File(sketchPath("")+"/*.csv"); 
@@ -371,6 +370,8 @@ void plot3SetConfig() {
   
   plot3.getYAxis().setLim(new float[] { 0, 4100});
   plot3.getYAxis().setNTicks( 10);
+  plot3.getXAxis().setLim(new float[] { 0, 100});
+  plot3.setFixedXLim(true);
   plot3.getXAxis().setNTicks( 10);
   
   // Set plot1 configs
@@ -380,7 +381,16 @@ void plot3SetConfig() {
 }
 
 void plot3Draw() {
-
+  
+  loadingText();
+  // Create the plot
+  plot3SetConfig();
+  
+  // Adds all files to the timeline
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    dataFiles[x].addFileToTimeline();
+  }
+  plot3.setXLim( -50 , 200);
 }
 
 void loadData(File selection) {
@@ -536,6 +546,7 @@ void resetView() {
 
 
 void mouseClicked() {
+  if (plotMode != 0) return;
   
   if ( mouseButton == RIGHT) {
     rightMouseFunction();
@@ -551,6 +562,7 @@ void mouseClicked() {
 void keyReleased() {
   switch (key) {
     case 'N':
+      if (plotMode != 0) return;
       if ( dataFileCount >= dataFilesMax ) {
         javax.swing.JOptionPane.showMessageDialog(null, "Max number of files reached.", "File Input Error", javax.swing.JOptionPane.INFORMATION_MESSAGE);
       } else {
@@ -560,16 +572,49 @@ void keyReleased() {
       }
     break;
     case 'R':
+      if (plotMode != 0) return;
       resetView();
     break;
     case 'T':
-      if (plotMode == 0) {
+      if (plotMode == 0) { //<>//
+        noLoop();
+        plot1.deactivateZooming(); // the movement in plot3 affects the others
+        plot1.deactivatePanning();
+        
+        // Configure and add all layers and points
         plot3Draw();
+        // Pass the mode so draw it in screen
         plotMode = 1;
-        println(plotMode);
+        loop();
       }
       else {
         plotMode = 0;
+        plot3 = null;
+        plot1.activateZooming(1.2, CENTER, CENTER);
+        plot1.activatePanning();
+      }
+    break;
+  }
+}
+
+void keyPressed() {
+  switch (key) {
+    case CODED:
+      if (plotMode != 1) return;
+      float[] yLim = plot3.getYLim();
+      switch (keyCode) {
+        case UP:
+          if ( yLim[0] < 100 ) yLim[0]=50;
+          if ( yLim[1] > 4000) yLim[1]=4050;
+          plot3.setYLim ( yLim[0]-50 , yLim[1]+50);
+        break;
+        case DOWN:
+          if ( yLim[1] - yLim[0] < 200 ) {
+            yLim[0] -= 50;
+            yLim[1] += 50;
+          }
+          plot3.setYLim ( yLim[0]+50 , yLim[1]-50);
+        break;
       }
     break;
   }
