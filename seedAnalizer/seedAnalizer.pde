@@ -42,8 +42,10 @@ final int plotToX = 680;
 final int plotToY = 680;
 
 // Define the version SW
-final String swVersion = "0.8";
+final String swVersion = "0.9";
 boolean debug = true;
+
+public PImage imgConfig, imgDelete;
 
 void settings() {
   size(1600, 800, PConstants.FX2D );
@@ -63,6 +65,11 @@ void setup() {
   }
   surface.setTitle("Seed Analizer (v" + swVersion + ")" ); 
   
+  //Load images for program
+  imgConfig = loadImage("gear.png");
+  imgConfig.filter(GRAY);
+  imgDelete = loadImage("delete.png");
+  imgDelete.filter(GRAY);
   // Check for new Updates
   checkUpdates();
   
@@ -82,6 +89,7 @@ void setup() {
 
 public int plotMode = 0;
 void draw() {
+  
   background(255);  // clear the previus draw
   
   // Draw the Plots
@@ -122,7 +130,10 @@ void draw() {
       plot2.drawTitle();
       plot2.drawHistograms();
       plot2.endDraw();
+      tint(150, 180);
+      image(imgConfig, plotToX+380, plotFromY+10, 24, 24);
       // Draw probabilistic info to the right
+      
       drawMath();
     break;
   }
@@ -135,7 +146,7 @@ void drawMath() {
   int positionX = width-20;
   int positionY = 40;
   int wideForm = 160;
-  int heightForm = 70;
+  int heightForm = 90;
   
   for (int x = 0; x < dataFileCount ; x++ ) {
     //Drawing one rectangle
@@ -154,13 +165,19 @@ void drawMath() {
     fn = fn.substring(0,fn.length()-4 );
     if ( fn.length() > 21){
       fn = fn.substring(0,19);
-      fn += "...";      
+      fn += "..";   
+      textAlign(LEFT);
+      text( fn, positionX - wideForm + 2, positionY+15);
     }
-    text( fn, positionX - wideForm/2, positionY+15);
+    else
+      text( fn, positionX - wideForm/2, positionY+15);
+    
+    image(imgDelete, positionX-20, positionY+1, 20, 19);
     // Write the math
     fill(0);
     float avg = dataFiles[x].getAvgDeltaValue();
     float sDeviation = dataFiles[x].getSDeviation();
+    float cv = sDeviation / avg ;
     textAlign(RIGHT);
     if ( avg == -1)
       text( "Average Delta: --" ,positionX-5, positionY+40);
@@ -170,6 +187,10 @@ void drawMath() {
       text( "SD: --" , positionX-5, positionY+60);
     else
       text( "SD: " +nf(sDeviation,0,2), positionX-5, positionY+60);
+    if (sDeviation == -1 || avg == -1)
+      text( "Cv: --" , positionX-5, positionY+60);
+    else
+      text( "Cv: " +nf(cv,0,2), positionX-5, positionY+80);
     
     // For the next loop
     positionY += heightForm + 20;
@@ -182,8 +203,12 @@ void showInfoText() {
 
   if ( millis() - time > 5000) {
     helpNumber ++;
-    if ( helpNumber > 4 )
-      helpNumber = 0;
+    if ( plotMode == 0) {
+      if ( helpNumber > 5 )  helpNumber = 0;
+    }
+    if ( plotMode == 1) {
+      if ( helpNumber > 2 )  helpNumber = 0;
+    }
     time = millis();
   }
   textAlign(LEFT);
@@ -201,6 +226,9 @@ void showInfoText() {
       break;
       case 3:
         text("Press 'r' to center the view", 10, height-10);
+      break;
+      case 4:
+        text("Press 'h' to change the desired histogram bins", 10, height-10);
       break;
       default:
         text("Press 't' to make a timeline", 10, height-10);
@@ -280,6 +308,23 @@ void plot2SetConfig(){    // Histogram
   
 }
 
+void setHClassesNumber() {
+  String sNumber = javax.swing.JOptionPane.showInputDialog(null,
+    "Set the desired histograms bins.\nSet 0 for auto","Input",javax.swing.JOptionPane.QUESTION_MESSAGE);
+  if ( sNumber == null || sNumber.equals("") ) return;
+  int number = int(sNumber);
+  if ( number < 0 ) return;
+  hUserClasses = number;
+  
+  // Remove all histogram layers to redraw it
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    dataFiles[x].removeHistogramLayers ();
+  }
+  // Draw histogram for all files
+  plot2Draw();
+}
+
+int hUserClasses = 0;
 void plot2Draw() {  
   // Get info of all the files necesaries to configure the plot histogram
   int[] pointsInfo = new int[3];
@@ -301,7 +346,11 @@ void plot2Draw() {
   hNoData = false;
   
   // Calculate histogram bin count and more
-  int hClasses = (int) Math.sqrt( (double)hPoints ); // Define the quantity of classes (divisions/bins of the histogram)
+  int hClasses;
+  if ( hUserClasses == 0 )
+    hClasses = (int) Math.sqrt( (double)hPoints ); // Define the quantity of classes (divisions/bins of the histogram)
+  else
+    hClasses = hUserClasses;
   hClasses = (hClasses>20) ? 20 : hClasses; // Classes should not be greater than 20 or smaller than 3
   hClasses = (hClasses<4) ? 4 : hClasses;
   int hClassesWidth = ceil( (float)(  (float)( hMaxValue - hMinValue ) / hClasses) );  // Get the width of each bin
@@ -322,7 +371,7 @@ void plot2Draw() {
   // Plot
   plot2.startHistograms(GPlot.VERTICAL);
   plot2.getHistogram().setDrawLabels(true);
-  plot2.getHistogram().setRotateLabels(false);
+  plot2.getHistogram().setRotateLabels(true);
   
   // Set layers colors
   for (int x = 0 ; x < dataFileCount ; x++) {
@@ -414,6 +463,7 @@ void plot3Draw() {
 void loadData(File selection) {
   if (selection == null) {
     javax.swing.JOptionPane.showMessageDialog(null, "No file selected.", "File Input Error", javax.swing.JOptionPane.WARNING_MESSAGE);
+    loop();
     return;
   }
   String fileName = selection.getName(), fileNamePath = selection.getAbsolutePath();
@@ -436,6 +486,56 @@ void loadData(File selection) {
   // Prepare for the next file
   dataFileCount++;
   
+  // Draw histogram for all files
+  plot2Draw();
+  
+  // To update title seeds number and calculate probabilistic math
+  seedCounter = 0;
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    seedCounter += dataFiles[x].getValidSeeds ();
+    dataFiles[x].calcSDeviation();
+  }
+  
+  loop();
+}
+
+void deleteFile (int numberDelete) {
+ if ( dataFileCount == 0 ) return;
+ 
+ noLoop();
+ 
+ // Remove all histogram layers to redraw it
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    dataFiles[x].removeHistogramLayers ();
+  }
+ 
+ // Delete the selected File and reorder the dataFiles vector
+ dataFiles[ numberDelete ] = null; //<>//
+ 
+ for ( int x = numberDelete ; x < dataFileCount-1 ; x++) {
+   int fIndex = dataFiles[ x+1 ].getFileIndex();
+   dataFiles[ x ] = dataFiles[ x+1 ];
+   dataFiles[ x ].setFileIndex( fIndex-1 );
+ }
+ dataFiles[ dataFileCount-1 ] = null;
+ dataFileCount--;
+ 
+ // Delet the plot and redraw it
+ plot1 = null;
+ plot1SetConfig();
+ 
+ // Redraw plot1
+ if (dataFileCount>1) {
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    dataFiles[x].addLayers ();
+  }
+ }
+ if (dataFileCount==1) {
+   dataFileCount = 0;
+   dataFiles[0].addLayers ();
+   dataFileCount++;
+ }
+ 
   // Draw histogram for all files
   plot2Draw();
   
@@ -486,7 +586,6 @@ void rightMouseFunction() {
   for (int x = 0 ; x < dataFileCount ; x++) {
     dataFiles[x].removeHistogramLayers ();
   }
-  plot1.setXLim( 0 , 100);
   // Draw histogram for all files
   plot2Draw();
   
@@ -572,7 +671,23 @@ void mouseClicked() {
   }
   
   if ( mouseButton == LEFT) {
-    leftMouseFunction();
+    // If i press in gear image to config histogram
+    if (mouseX >= plotToX+380 && mouseX <= plotToX+380+24 && mouseY >= plotFromY+10 && mouseY <= plotFromY+10+24)
+      setHClassesNumber();
+    else if ( mouseX>=(width-180) && mouseY>=40 ){ // If i press with the mouse within the math info
+      int positionX = width-20;
+      int positionY = 40;
+      int heightForm = 90;
+      int wideForm = 160;
+      for ( int x=0 ; x<dataFileCount ; x++){
+        // If the user clic in the delete image
+        if (mouseX >= positionX-20 && mouseX <= positionX && mouseY >= positionY && mouseY <= positionY+20)
+          deleteFile(x);
+        positionY += heightForm + 20;
+      }
+    }
+    else
+      leftMouseFunction();
   }
   
 }
@@ -594,8 +709,12 @@ void keyReleased() {
       if (plotMode != 0) return;
       resetView();
     break;
+    case 'H':
+      if (plotMode != 0) return;
+      setHClassesNumber();
+    break;
     case 'T':
-      if (plotMode == 0) { //<>//
+      if (plotMode == 0) {
         noLoop();
         loadingText();
         plot1.deactivateZooming(); // the movement in plot3 affects the others
