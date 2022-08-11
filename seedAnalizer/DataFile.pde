@@ -311,4 +311,12 @@ class DataFile {
     
   }
   
+  int getFileIndex() {
+    return fileIndex;
+  }
+  
+  void setFileIndex( int fi ) {
+    fileIndex = fi;
+  }
+  
 }

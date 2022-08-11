@@ -45,7 +45,7 @@ final int plotToY = 680;
 final String swVersion = "0.9";
 boolean debug = true;
 
-public PImage imgConfig;
+public PImage imgConfig, imgDelete;
 
 void settings() {
   size(1600, 800, PConstants.FX2D );
@@ -65,9 +65,11 @@ void setup() {
   }
   surface.setTitle("Seed Analizer (v" + swVersion + ")" ); 
   
-  //Lead images for program
+  //Load images for program
   imgConfig = loadImage("gear.png");
   imgConfig.filter(GRAY);
+  imgDelete = loadImage("delete.png");
+  imgDelete.filter(GRAY);
   // Check for new Updates
   checkUpdates();
   
@@ -87,6 +89,7 @@ void setup() {
 
 public int plotMode = 0;
 void draw() {
+  
   background(255);  // clear the previus draw
   
   // Draw the Plots
@@ -130,6 +133,7 @@ void draw() {
       tint(150, 180);
       image(imgConfig, plotToX+380, plotFromY+10, 24, 24);
       // Draw probabilistic info to the right
+      
       drawMath();
     break;
   }
@@ -161,9 +165,14 @@ void drawMath() {
     fn = fn.substring(0,fn.length()-4 );
     if ( fn.length() > 21){
       fn = fn.substring(0,19);
-      fn += "...";      
+      fn += "..";   
+      textAlign(LEFT);
+      text( fn, positionX - wideForm + 2, positionY+15);
     }
-    text( fn, positionX - wideForm/2, positionY+15);
+    else
+      text( fn, positionX - wideForm/2, positionY+15);
+    
+    image(imgDelete, positionX-20, positionY+1, 20, 19);
     // Write the math
     fill(0);
     float avg = dataFiles[x].getAvgDeltaValue();
@@ -454,6 +463,7 @@ void plot3Draw() {
 void loadData(File selection) {
   if (selection == null) {
     javax.swing.JOptionPane.showMessageDialog(null, "No file selected.", "File Input Error", javax.swing.JOptionPane.WARNING_MESSAGE);
+    loop();
     return;
   }
   String fileName = selection.getName(), fileNamePath = selection.getAbsolutePath();
@@ -476,6 +486,56 @@ void loadData(File selection) {
   // Prepare for the next file
   dataFileCount++;
   
+  // Draw histogram for all files
+  plot2Draw();
+  
+  // To update title seeds number and calculate probabilistic math
+  seedCounter = 0;
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    seedCounter += dataFiles[x].getValidSeeds ();
+    dataFiles[x].calcSDeviation();
+  }
+  
+  loop();
+}
+
+void deleteFile (int numberDelete) {
+ if ( dataFileCount == 0 ) return;
+ 
+ noLoop();
+ 
+ // Remove all histogram layers to redraw it
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    dataFiles[x].removeHistogramLayers ();
+  }
+ 
+ // Delete the selected File and reorder the dataFiles vector
+ dataFiles[ numberDelete ] = null; //<>//
+ 
+ for ( int x = numberDelete ; x < dataFileCount-1 ; x++) {
+   int fIndex = dataFiles[ x+1 ].getFileIndex();
+   dataFiles[ x ] = dataFiles[ x+1 ];
+   dataFiles[ x ].setFileIndex( fIndex-1 );
+ }
+ dataFiles[ dataFileCount-1 ] = null;
+ dataFileCount--;
+ 
+ // Delet the plot and redraw it
+ plot1 = null;
+ plot1SetConfig();
+ 
+ // Redraw plot1
+ if (dataFileCount>1) {
+  for (int x = 0 ; x < dataFileCount ; x++) {
+    dataFiles[x].addLayers ();
+  }
+ }
+ if (dataFileCount==1) {
+   dataFileCount = 0;
+   dataFiles[0].addLayers ();
+   dataFileCount++;
+ }
+ 
   // Draw histogram for all files
   plot2Draw();
   
@@ -614,6 +674,18 @@ void mouseClicked() {
     // If i press in gear image to config histogram
     if (mouseX >= plotToX+380 && mouseX <= plotToX+380+24 && mouseY >= plotFromY+10 && mouseY <= plotFromY+10+24)
       setHClassesNumber();
+    else if ( mouseX>=(width-180) && mouseY>=40 ){ // If i press with the mouse within the math info
+      int positionX = width-20;
+      int positionY = 40;
+      int heightForm = 90;
+      int wideForm = 160;
+      for ( int x=0 ; x<dataFileCount ; x++){
+        // If the user clic in the delete image
+        if (mouseX >= positionX-20 && mouseX <= positionX && mouseY >= positionY && mouseY <= positionY+20)
+          deleteFile(x);
+        positionY += heightForm + 20;
+      }
+    }
     else
       leftMouseFunction();
   }
