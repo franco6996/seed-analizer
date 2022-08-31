@@ -319,4 +319,68 @@ class DataFile {
     fileIndex = fi;
   }
   
+  String exportToFile( int format ){
+    String fileSavedIn = "";
+    
+    switch (format) {
+      case 0:  /*  Export in .csv format  */
+        /*  Init new table where to export  */
+        Table tableExport;
+        tableExport = new Table();
+        
+        /*  Add colums  */
+        tableExport.addColumn("#");
+        tableExport.addColumn("timeStamp");
+        for ( int i=0 ; i < 101 ; i++ ){
+          tableExport.addColumn( str(i) );
+        }
+        
+        /*  Add Rows  */
+        for (Seed s : seeds) { //<>//
+          s.addSeedToTable( tableExport );
+        }
+        
+        /*  Save table  */
+        fileSavedIn = fileNamePath.substring(0,fileNamePath.length()-4 ) + "_exported.csv";
+        saveTable( tableExport, fileSavedIn );
+        
+        break;
+      case 1:  /* Export in .txt format   */
+        String matrixVector[] = {"","",""};
+        
+        /*  Add the text of all the seeds data  */
+        int numberOfSeeds = 0;
+        for (Seed s : seeds) {
+          String newSeed = s.getDataOnString();
+          if ( newSeed != null ) {
+            numberOfSeeds++;
+            matrixVector[1] += newSeed + ",\n";
+          }
+        }
+        
+        /*  Add the end of the matrix vector  */
+        matrixVector[1] = matrixVector[1].substring(0,matrixVector[1].length()-2 ) + "\n";
+        matrixVector[1] += "};";
+        
+        /*  Add the start of the matrix vector  */
+        matrixVector[0] = "#define NUMBER_OF_SEEDS " + numberOfSeeds + "\nuint16_t seedsData[NUMBER_OF_SEEDS][101] = {";
+        
+        /*  Add the timeStamps  */
+        matrixVector[2] = "uint32_t seedsTimeStamp[NUMBER_OF_SEEDS] = {";
+        for (Seed s : seeds) {
+          int newTimeStamp = s.getTimeStamp();
+          if ( newTimeStamp != -1 ) {
+            matrixVector[2] += newTimeStamp + ",";
+          }
+        }
+        matrixVector[2] = matrixVector[2].substring(0,matrixVector[2].length()-1 ) + "};";
+        
+        /*  Save text file  */
+        fileSavedIn = fileNamePath.substring(0,fileNamePath.length()-4 ) + "_exported.h";
+        saveStrings( fileSavedIn, matrixVector );
+        break;
+    }
+    return fileSavedIn;
+  }
+  
 }

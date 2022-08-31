@@ -29,6 +29,7 @@ String[] column_compare = { "#", "timeStamp", "0"}; // format of .csv file to co
 public int seedCounter = 0;
 public float hMaxProbValue = 0;
 public boolean hNoData = false;
+public boolean firstTimeStarted = true;
 
 // Predefined Plot Colors= {  R,   G,   B,Yell,Cyan,Mage,}
 int[] predefinedColorR = {  255,   0,   0, 255,   0, 255,};
@@ -42,10 +43,10 @@ final int plotToX = 680;
 final int plotToY = 680;
 
 // Define the version SW
-final String swVersion = "0.9";
+final String swVersion = "0.10";
 boolean debug = true;
 
-public PImage imgConfig, imgDelete;
+public PImage imgConfig, imgDelete, imgExport;
 
 void settings() {
   size(1600, 800, PConstants.FX2D );
@@ -70,8 +71,12 @@ void setup() {
   imgConfig.filter(GRAY);
   imgDelete = loadImage("delete.png");
   imgDelete.filter(GRAY);
+  imgExport = loadImage("export.png");
+  imgExport.filter(GRAY);
+  
   // Check for new Updates
   checkUpdates();
+  
   
   dataFiles = new DataFile[dataFilesMax];
   dataFileCount = 0;
@@ -79,10 +84,10 @@ void setup() {
   plot1SetConfig();
   plot2SetConfig();
   
-  noLoop();
+  
   File start1 = new File(sketchPath("")+"/*.csv"); 
   selectInput("Select a .csv file to analize", "loadData", start1);
-  
+  noLoop();
   PFont font = createFont("Consolas", 12);
   textFont(font);
 }
@@ -150,9 +155,10 @@ void drawMath() {
   
   for (int x = 0; x < dataFileCount ; x++ ) {
     //Drawing one rectangle
-    noFill();
+    fill(248);
     stroke(200);
     rect(positionX, positionY, -wideForm, heightForm);
+    noFill();
     line(positionX, positionY+20, positionX-wideForm, positionY+20);
     fill(0);
     textAlign(CENTER);
@@ -172,7 +178,8 @@ void drawMath() {
     else
       text( fn, positionX - wideForm/2, positionY+15);
     
-    image(imgDelete, positionX-20, positionY+1, 20, 19);
+    image(imgDelete, positionX-wideForm, positionY+heightForm-20, 20, 20);
+    image(imgExport, positionX-wideForm+25, positionY+heightForm-20, 19, 19);
     // Write the math
     fill(0);
     float avg = dataFiles[x].getAvgDeltaValue();
@@ -497,20 +504,51 @@ void loadData(File selection) {
   }
   
   loop();
+  
+  if (dataFileCount==1 && firstTimeStarted == false) {
+    plot1.setXLim( -1 , 101);
+    plot1.setYLim( 500 , 3000);
+  }
+  
+  firstTimeStarted = false;
+}
+
+
+void exportFile (int numberExport) {
+  if ( dataFileCount == 0 ) return;
+  
+  /*  Ask what type of file to export  */
+  String[] options = {".csv", ".h"};
+  int format = javax.swing.JOptionPane.showOptionDialog(null,"Select the format to export the file:\n-Same format as input files (.csv)\n-Matrix Vector in a C code format (.h)", "Export File",
+  javax.swing.JOptionPane.DEFAULT_OPTION, javax.swing.JOptionPane.INFORMATION_MESSAGE,
+  null, options, options[0]);
+  
+  
+  if ( format != -1 ) {
+    /*  Export indicated File  */
+    String exportedIn = dataFiles[ numberExport ].exportToFile( format );
+    /*  Show success  */
+    javax.swing.JOptionPane.showMessageDialog(null, "File Exported in " + exportedIn, "Export File", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+  }
+  else {
+    /*  Show error  */
+    javax.swing.JOptionPane.showMessageDialog(null, "Error exporting the file!", "Export File", javax.swing.JOptionPane.ERROR_MESSAGE);
+  }
+  
 }
 
 void deleteFile (int numberDelete) {
  if ( dataFileCount == 0 ) return;
  
  noLoop();
- 
+ lastHighlightedLayer = null;
  // Remove all histogram layers to redraw it
   for (int x = 0 ; x < dataFileCount ; x++) {
     dataFiles[x].removeHistogramLayers ();
   }
  
  // Delete the selected File and reorder the dataFiles vector
- dataFiles[ numberDelete ] = null; //<>//
+ dataFiles[ numberDelete ] = null;
  
  for ( int x = numberDelete ; x < dataFileCount-1 ; x++) {
    int fIndex = dataFiles[ x+1 ].getFileIndex();
@@ -547,6 +585,7 @@ void deleteFile (int numberDelete) {
   }
   
   loop();
+  
 }
 
 void rightMouseFunction() {
@@ -562,7 +601,7 @@ void rightMouseFunction() {
   // Break if no point or too many are close.
   if ( layerNames.size() == 0 )
     return;
-  if ( layerNames.size() > 3 )
+  if ( layerNames.size() > 5 )
     return;
   // set the seeds of the selected layers as invalid and remove it from the plot
   for ( int x = 0 ; x < layerNames.size() ; x++ ) {
@@ -657,7 +696,7 @@ void resetView() {
     lastHighlightedLayer = null;
     
     float[] center = new float[2];
-    center = plot1.getScreenPosAtValue(50, 2000);
+    center = plot1.getScreenPosAtValue(50, 1500);
     plot1.center (center[0],center[1]);
     plot1.setXLim( 0 , 100);
 }
@@ -681,8 +720,11 @@ void mouseClicked() {
       int wideForm = 160;
       for ( int x=0 ; x<dataFileCount ; x++){
         // If the user clic in the delete image
-        if (mouseX >= positionX-20 && mouseX <= positionX && mouseY >= positionY && mouseY <= positionY+20)
+        if (mouseX >= positionX-wideForm && mouseX <= positionX-wideForm+20 && mouseY >= positionY+heightForm-20 && mouseY <= positionY+heightForm)
           deleteFile(x);
+        // If the user clic in the export icon
+        if (mouseX >= positionX-wideForm+25 && mouseX <= positionX-wideForm+20+25 && mouseY >= positionY+heightForm-20 && mouseY <= positionY+heightForm)
+          exportFile(x);
         positionY += heightForm + 20;
       }
     }
