@@ -79,6 +79,9 @@ class Seed {
   }
   
   int getTimeStamp() {
+    if (validSeed == false)  // if the seed is invalid, no layer exist in the plot of itself.
+      return -1;
+      
     return timeStamp;
   }
   
@@ -130,5 +133,19 @@ class Seed {
     for (int i = 0; i<101; i++ ){
       newRow.setInt( str(i) , value[i]);
     }
+  }
+  
+  String getDataOnString (){
+    if (validSeed == false)  // if the seed is invalid, not add the seed.
+      return null;
+    
+    /*  Conform the string  */
+    String data = "{" + value[0];
+    for (int i = 1; i<101; i++ ){
+      data += "," + value[i];
+    }
+    data += "}";
+    
+    return data;
   }
 }

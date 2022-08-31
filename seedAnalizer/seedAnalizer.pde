@@ -84,10 +84,10 @@ void setup() {
   plot1SetConfig();
   plot2SetConfig();
   
-  noLoop();
+  
   File start1 = new File(sketchPath("")+"/*.csv"); 
   selectInput("Select a .csv file to analize", "loadData", start1);
-  
+  noLoop();
   PFont font = createFont("Consolas", 12);
   textFont(font);
 }
@@ -155,9 +155,10 @@ void drawMath() {
   
   for (int x = 0; x < dataFileCount ; x++ ) {
     //Drawing one rectangle
-    noFill();
+    fill(248);
     stroke(200);
     rect(positionX, positionY, -wideForm, heightForm);
+    noFill();
     line(positionX, positionY+20, positionX-wideForm, positionY+20);
     fill(0);
     textAlign(CENTER);
@@ -516,11 +517,24 @@ void loadData(File selection) {
 void exportFile (int numberExport) {
   if ( dataFileCount == 0 ) return;
   
-  /*  Export indicated File  */
-  String exportedIn = dataFiles[ numberExport ].exportToFile();
+  /*  Ask what type of file to export  */
+  String[] options = {".csv", ".h"};
+  int format = javax.swing.JOptionPane.showOptionDialog(null,"Select the format to export the file:\n-Same format as input files (.csv)\n-Matrix Vector in a C code format (.h)", "Export File",
+  javax.swing.JOptionPane.DEFAULT_OPTION, javax.swing.JOptionPane.INFORMATION_MESSAGE,
+  null, options, options[0]);
   
-  /*  Show success  */
-  javax.swing.JOptionPane.showMessageDialog(null, "File Exported in " + exportedIn, "Export File", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+  
+  if ( format != -1 ) {
+    /*  Export indicated File  */
+    String exportedIn = dataFiles[ numberExport ].exportToFile( format );
+    /*  Show success  */
+    javax.swing.JOptionPane.showMessageDialog(null, "File Exported in " + exportedIn, "Export File", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+  }
+  else {
+    /*  Show error  */
+    javax.swing.JOptionPane.showMessageDialog(null, "Error exporting the file!", "Export File", javax.swing.JOptionPane.ERROR_MESSAGE);
+  }
+  
 }
 
 void deleteFile (int numberDelete) {
