@@ -319,4 +319,29 @@ class DataFile {
     fileIndex = fi;
   }
   
+  String exportToFile(){
+    /*  Init new table where to export  */
+    Table tableExport;
+    tableExport = new Table();
+    
+    /*  Add colums  */
+    tableExport.addColumn("#");
+    tableExport.addColumn("timeStamp");
+    for ( int i=0 ; i < 101 ; i++ ){
+      tableExport.addColumn( str(i) );
+    }
+    
+    /*  Add Rows  */
+    for (Seed s : seeds) { //<>//
+      s.addSeedToTable( tableExport );
+    }
+    
+    /*  Save table  */
+    String fileSavedIn = fileNamePath.substring(0,fileNamePath.length()-4 ) + "exported.csv";
+    saveTable( tableExport, fileSavedIn );
+    
+    return fileSavedIn;
+    
+  }
+  
 }

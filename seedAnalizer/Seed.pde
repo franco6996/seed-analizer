@@ -119,4 +119,16 @@ class Seed {
   int getItem() {
     return item;
   }
+  
+  void addSeedToTable( Table tableExport ) {
+    if (validSeed == false)  // if the seed is invalid, not add the seed.
+      return;
+    /*  Add row containing the data of this seed  */
+    TableRow newRow = tableExport.addRow();
+    newRow.setInt("#", item);
+    newRow.setInt("timeStamp", timeStamp);
+    for (int i = 0; i<101; i++ ){
+      newRow.setInt( str(i) , value[i]);
+    }
+  }
 }

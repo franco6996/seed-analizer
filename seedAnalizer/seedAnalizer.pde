@@ -42,10 +42,10 @@ final int plotToX = 680;
 final int plotToY = 680;
 
 // Define the version SW
-final String swVersion = "0.9";
+final String swVersion = "0.10";
 boolean debug = true;
 
-public PImage imgConfig, imgDelete;
+public PImage imgConfig, imgDelete, imgExport;
 
 void settings() {
   size(1600, 800, PConstants.FX2D );
@@ -70,6 +70,8 @@ void setup() {
   imgConfig.filter(GRAY);
   imgDelete = loadImage("delete.png");
   imgDelete.filter(GRAY);
+  imgExport = loadImage("export.png");
+  imgExport.filter(GRAY);
   // Check for new Updates
   checkUpdates();
   
@@ -172,7 +174,8 @@ void drawMath() {
     else
       text( fn, positionX - wideForm/2, positionY+15);
     
-    image(imgDelete, positionX-20, positionY+1, 20, 19);
+    image(imgDelete, positionX-wideForm, positionY+heightForm-20, 20, 20);
+    image(imgExport, positionX-wideForm+25, positionY+heightForm-20, 19, 19);
     // Write the math
     fill(0);
     float avg = dataFiles[x].getAvgDeltaValue();
@@ -499,6 +502,17 @@ void loadData(File selection) {
   loop();
 }
 
+
+void exportFile (int numberExport) {
+  if ( dataFileCount == 0 ) return;
+  
+  /*  Export indicated File  */
+  String exportedIn = dataFiles[ numberExport ].exportToFile();
+  
+  /*  Show success  */
+  javax.swing.JOptionPane.showMessageDialog(null, "File Exported in " + exportedIn, "Export File", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+}
+
 void deleteFile (int numberDelete) {
  if ( dataFileCount == 0 ) return;
  
@@ -681,8 +695,11 @@ void mouseClicked() {
       int wideForm = 160;
       for ( int x=0 ; x<dataFileCount ; x++){
         // If the user clic in the delete image
-        if (mouseX >= positionX-20 && mouseX <= positionX && mouseY >= positionY && mouseY <= positionY+20)
+        if (mouseX >= positionX-wideForm && mouseX <= positionX-wideForm+20 && mouseY >= positionY+heightForm-20 && mouseY <= positionY+heightForm)
           deleteFile(x);
+        // If the user clic in the export icon
+        if (mouseX >= positionX-wideForm+25 && mouseX <= positionX-wideForm+20+25 && mouseY >= positionY+heightForm-20 && mouseY <= positionY+heightForm)
+          exportFile(x);
         positionY += heightForm + 20;
       }
     }
