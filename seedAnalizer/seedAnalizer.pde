@@ -500,6 +500,14 @@ void loadData(File selection) {
   }
   
   loop();
+  
+  if (dataFileCount==1) {
+    plot1.setXLim( -1 , 101);
+    plot1.setYLim( 1000 , 3000);
+    /*float[] center = new float[2];
+    center = plot1.getScreenPosAtValue(50, 2000);
+    plot1.center (center[0],center[1]);*/
+  }
 }
 
 
@@ -517,14 +525,14 @@ void deleteFile (int numberDelete) {
  if ( dataFileCount == 0 ) return;
  
  noLoop();
- 
+ lastHighlightedLayer = null;
  // Remove all histogram layers to redraw it
   for (int x = 0 ; x < dataFileCount ; x++) {
     dataFiles[x].removeHistogramLayers ();
   }
  
  // Delete the selected File and reorder the dataFiles vector
- dataFiles[ numberDelete ] = null; //<>//
+ dataFiles[ numberDelete ] = null;
  
  for ( int x = numberDelete ; x < dataFileCount-1 ; x++) {
    int fIndex = dataFiles[ x+1 ].getFileIndex();
@@ -561,6 +569,7 @@ void deleteFile (int numberDelete) {
   }
   
   loop();
+  
 }
 
 void rightMouseFunction() {
@@ -576,7 +585,7 @@ void rightMouseFunction() {
   // Break if no point or too many are close.
   if ( layerNames.size() == 0 )
     return;
-  if ( layerNames.size() > 3 )
+  if ( layerNames.size() > 5 )
     return;
   // set the seeds of the selected layers as invalid and remove it from the plot
   for ( int x = 0 ; x < layerNames.size() ; x++ ) {
