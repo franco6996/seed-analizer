@@ -29,6 +29,7 @@ String[] column_compare = { "#", "timeStamp", "0"}; // format of .csv file to co
 public int seedCounter = 0;
 public float hMaxProbValue = 0;
 public boolean hNoData = false;
+public boolean firstTimeStarted = true;
 
 // Predefined Plot Colors= {  R,   G,   B,Yell,Cyan,Mage,}
 int[] predefinedColorR = {  255,   0,   0, 255,   0, 255,};
@@ -72,8 +73,10 @@ void setup() {
   imgDelete.filter(GRAY);
   imgExport = loadImage("export.png");
   imgExport.filter(GRAY);
+  
   // Check for new Updates
   checkUpdates();
+  
   
   dataFiles = new DataFile[dataFilesMax];
   dataFileCount = 0;
@@ -501,13 +504,12 @@ void loadData(File selection) {
   
   loop();
   
-  if (dataFileCount==1) {
+  if (dataFileCount==1 && firstTimeStarted == false) {
     plot1.setXLim( -1 , 101);
-    plot1.setYLim( 1000 , 3000);
-    /*float[] center = new float[2];
-    center = plot1.getScreenPosAtValue(50, 2000);
-    plot1.center (center[0],center[1]);*/
+    plot1.setYLim( 500 , 3000);
   }
+  
+  firstTimeStarted = false;
 }
 
 
@@ -680,7 +682,7 @@ void resetView() {
     lastHighlightedLayer = null;
     
     float[] center = new float[2];
-    center = plot1.getScreenPosAtValue(50, 2000);
+    center = plot1.getScreenPosAtValue(50, 1500);
     plot1.center (center[0],center[1]);
     plot1.setXLim( 0 , 100);
 }
